@@ -3,7 +3,7 @@ import tkinter as tk
 import customtkinter
 import json
 import os
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageOps
 
 from CustomCTkTable import *
 import threading
@@ -11,43 +11,50 @@ from tkinter import messagebox, ttk
 
 from confluent_kafka import *
 from ScrollableRadioButtonFrame import ScrollableRadiobuttonFrame
+from datasetMap import DatasetMap
 from messages.sendRequest import SendRequest
 
 from messages.sendRequest import SendRequest
-
-
 
 
 class QuerySpatial:
     frame = None
 
     def __init__(self, App):
+        # App
+        self.App = App
+
         # Current synopsis
 
-        self.grid_window_ctk = None
+        # Windows
+        self.img_window_ctk = None # Window for the image
+        self.grid_window_ctk = None # Window for the grid
+
+        # Widgets
         self.button_load_synopses = None
         self.scrollable_frame_synopses = None
         self.table = None
+
+        # Dataset map
+        self.dsMap = None
+
+        self.scrollable_frame = None
+        self.output = None
+        self.frame = None
+        self.labels = ["Estimate:"]
+        self.entry_widgets = {}
+
+
+        self.selected_cells = []
+
+        # Current synopsis
+        self.curU_name = None
         self.curUID = None
         self.curStreamID = None
         self.curDatasetKey = None
         self.curSynopsisID = None
         self.curNoOfP = None
         self.curParameters = None
-
-        self.scrollable_frame = None
-        self.App = App
-        self.output = None
-        self.frame = None
-        self.labels = ["Estimate:"]
-        self.entry_widgets = {}
-
-        self.queries = {}
-
-        self.queryID = 0
-
-        self.selected_cells = []
-
 
         self.minY = None
         self.maxY = None
@@ -69,35 +76,47 @@ class QuerySpatial:
         self.dataEntry.grid(row=2, columnspan=4, padx=(20, 20), pady=(20, 20), sticky="nsew")
         label_dataEntry = customtkinter.CTkLabel(self.dataEntry, text="Step 2: Choose Query Parameters",
                                                  font=customtkinter.CTkFont(size=15, weight="bold"))
-        label_dataEntry.grid(row=0, column=0, padx=20, pady=(10, 10), sticky="nsew")
-        self.queryParameters = customtkinter.CTkEntry(master=self.dataEntry, width=250,
-                                                      placeholder_text="Query Parameters")
-        self.queryParameters.grid(row=1, column=0, padx=20, pady=(10, 10))
+        label_dataEntry.grid(row=0, columnspan=4, padx=20, pady=(10, 10), sticky="nsew")
 
-        # Define custom style for hover effect
-        # self.style = ttk.Style()
-        # self.style.map("Hover.TTreeview",
-        #                background=[("active", "#f0f0f0"), ("!active", "white")],
-        #                foreground=[("active", "black"), ("!active", "black")]
-        #                )
-        # # Button to show the grid
+        if self.dsMap is None:
+            label = customtkinter.CTkLabel(self.dataEntry, text="Custom Parameters",
+                                           font=customtkinter.CTkFont(size=14))
+            label.grid(row=1, column=0, padx=20, pady=(10, 10))
+            entry = customtkinter.CTkEntry(master=self.dataEntry, width=250, placeholder_text="Query Parameters")
+            entry.grid(row=1, column=1, padx=20, pady=(10, 10))
+        else:
+            for i, label_text in enumerate(self.dsMap["queryParameters"]):
+                label = customtkinter.CTkLabel(self.dataEntry, text=label_text,
+                                               font=customtkinter.CTkFont(size=14))
+                label.grid(row=i + 1, column=0, padx=20, pady=(10, 10))
+                entry = customtkinter.CTkEntry(master=self.dataEntry, width=250, placeholder_text=label_text)
+                entry.grid(row=i + 1, column=1, padx=20, pady=(10, 10))
+        self.dataEntry.get = lambda: ", ".join([e.get() for e in self.dataEntry.winfo_children() if isinstance(e, customtkinter.CTkEntry)])
+        #     queryParameters = customtkinter.CTkEntry(master=self.dataEntry, width=250,
+        #                                               placeholder_text="Query Parameters")
+        # self.queryParameters.grid(row=1, column=0, padx=20, pady=(10, 10))
+
+        # Button to show the grid
         self.create_grid()
 
-        # self.showGridButton = customtkinter.CTkButton(self.f, text="Show Grid", command=self.show_grid)
-        # self.showGridButton.grid(row=0, column=2, padx=20, pady=20)
-
         # create a button to send the request to the kafka topic
-        bt_query_synopsis = customtkinter.CTkButton(master=self.dataEntry, text="Submit Query",
+        bt_query_synopsis = customtkinter.CTkButton(master=self.frame, text="Submit Query",
                                                     command=self.send_request)
-        bt_query_synopsis.grid(row=1, column=1, padx=(20, 0), pady=(20, 20))
+        bt_query_synopsis.grid(row=3,columnspan=2, padx=(20, 0), pady=(20, 20))
 
     def create_grid(self):
+        # First destroy the existing grid
+        if self.img_window_ctk is not None:
+            self.img_window_ctk.destroy()
+        if self.grid_window_ctk is not None:
+            self.grid_window_ctk.destroy()
+
         # Check if syn_array has at least 5 elements
 
-        self.curMaxCol = int(self.minX)
-        self.curMinCol = int(self.maxX)
-        self.curMaxRow = int(self.minY)
-        self.curMinRow = int(self.maxY)
+        self.curMaxCol = 0#int(self.minX)
+        self.curMinCol = self.resolution#int(self.maxX)
+        self.curMaxRow = 0#int(self.minY)
+        self.curMinRow = self.resolution#int(self.maxY)
 
         sizeY = int(self.maxY) - int(self.minY)
         sizeX = int(self.maxX) - int(self.minX)
@@ -108,23 +127,29 @@ class QuerySpatial:
         scaleFactorY = self.desiredSize / sizeY
         self.img_window_ctk = customtkinter.CTkToplevel(self.App)
         self.img_window = customtkinter.CTkFrame(self.img_window_ctk)
-        self.img_window.pack(fill=tkinter.BOTH, expand=True, padx=0, pady=0)
+
         self.img_window_ctk.geometry("{}x{}".format(self.desiredSize, self.desiredSize))
 
         #self.img_window_ctk.geometry = self.App.geometry#("{0}x{0}+0+0".format(self.App.winfo_screenwidth(), self.App.winfo_screenheight()))
         self.img_window_ctk.title("Step 3: Choose parameters")
+
         self.img_window_ctk.resizable(False, False)
 
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_images")
-        self.europe_map_image = customtkinter.CTkImage(
-            Image.open(os.path.join(image_path, "2004px-Blank_map_of_Europe_cropped.svg.png")),size=(self.desiredSize,self.desiredSize))
+        img = Image.open(os.path.join(image_path, "europe_arcgis.png"))
+        img = ImageOps.fit(img, (self.desiredSize, self.desiredSize))
+        img_width, img_height = img.size
+        self.europe_map_image = customtkinter.CTkImage(img, size=(img_width, img_height))
         label_image = customtkinter.CTkLabel(self.img_window, text="", image=self.europe_map_image)
         label_image.image = self.europe_map_image
         label_image.place(relx=0.5, rely=0.5, anchor="center")
         label_image.pack()
+        self.img_window.pack(fill=tkinter.BOTH, expand=True, padx=0, pady=0)
 
         self.grid_window_ctk = customtkinter.CTkToplevel(self.App)
-        self.grid_window_ctk.geometry("{}x{}".format(self.desiredSize, self.desiredSize))
+        # self.grid_window_ctk.geometry("{}x{}".format(self.desiredSize, self.desiredSize))
+        self.grid_window_ctk.geometry("{}x{}".format(img_width, img_height))
+
         #self.grid_window_ctk.geometry = self.App.geometry#("{0}x{0}+0+0".format(self.App.winfo_screenwidth(), self.App.winfo_screenheight()))
         self.grid_window_ctk.resizable(False, False)
 
@@ -147,6 +172,7 @@ class QuerySpatial:
 
         grid_window.pack(fill=tkinter.BOTH, expand=True, padx=0, pady=0)
 
+
     def move_me(self, event):
         try:
             if self.img_window_ctk is not None:
@@ -160,8 +186,6 @@ class QuerySpatial:
 
         except NameError:
             pass
-
-
 
     def store_cell(self, e):
         row = e['row']
@@ -179,6 +203,9 @@ class QuerySpatial:
 
     def set_frame4(self):
         self.frame = self.App.frames["frame4"]
+        if (self.App.current_dataset != None):
+            self.dsMap = DatasetMap.getDataset(DatasetMap(), self.App.current_dataset["DatasetName"])
+
         # set title
         title = customtkinter.CTkLabel(self.frame, text="Query Synopsis",
                                        font=customtkinter.CTkFont(size=20, weight="bold"))
@@ -189,20 +216,25 @@ class QuerySpatial:
         self.App.frames["frame4"] = self.frame
 
     def getSelectedCells(self):
+        #reset old pars
+        self.curMaxCol = 0#int(self.minX)
+        self.curMinCol = self.resolution#int(self.maxX)
+        self.curMaxRow = 0#int(self.minY)
+        self.curMinRow = self.resolution#int(self.maxY)
+
         # go over all cells in table and store the selected ones
         self.selected_cells = []
-        print(self.table.frame)
         for i in range(self.resolution):
             for j in range(self.resolution):
                 if isinstance(self.table.frame[i, j], CustomCTkCheckBox):
                     if self.table.frame[i, j].get() == 1:
-                        print("Cell {}, {} selected".format(i, j))
+                        print("Cell: ", i, j, " is selected")
                         self.store_cell({"row": i, "column": j, "value": 1})
 
     def send_request(self):
 
         self.getSelectedCells()
-        basicSketchQueryParameters = self.queryParameters.get().split(",").replace(" ", "")
+        basicSketchQueryParameters = self.dataEntry.get().replace(" ", "").split(",") + "1".split(",")
         if len(basicSketchQueryParameters) != 2:
             messagebox.showerror("Error",
                                  "Please enter the two parameters for CountMin in SpatialSketch", parent=self.frame)
@@ -211,16 +243,26 @@ class QuerySpatial:
         if len(self.selected_cells) == 0:
             messagebox.showerror("Error", "Please select a grid", parent=self.frame)
             return
-        queryParameters = [basicSketchQueryParameters[0], basicSketchQueryParameters[1],
-                           str(self.curMinRow), str(self.curMaxRow), str(self.curMinCol), str(self.curMaxCol)]
 
-        rq = SendRequest(3, self.curDatasetKey, self.curStreamID, self.curUID, self.curSynopsisID,
+        # get dtypes of the parameters
+        self.minX = int(self.minX)
+        self.maxX = int(self.maxX)
+        self.minY = int(self.minY)
+        self.maxY = int(self.maxY)
+        #scale curMinRow, curMaxRow, curMinCol, curMaxCol to be absolute values based on grid
+        curMinValX = int(self.minX + (self.curMinCol * (self.maxX - self.minX) / self.resolution))
+        curMaxValX = int(self.minX + (self.curMaxCol * (self.maxX - self.minX) / self.resolution))
+        curMinValY = int(self.minY + (self.curMinRow * (self.maxY - self.minY) / self.resolution))
+        curMaxValY = int(self.minY + (self.curMaxRow * (self.maxY - self.minY) / self.resolution))
+        queryParameters = [basicSketchQueryParameters[0], basicSketchQueryParameters[1], str(curMinValX),
+                           str(curMaxValX),
+                           str(curMinValY), str(curMaxValY)]
+
+        rq = SendRequest(3, self.curDatasetKey, self.curStreamID, self.curU_name, self.curUID, self.curSynopsisID,
                          self.curNoOfP, queryParameters, self.App)
-
         rq.send_request_to_kafka_topic()
-        self.queries[self.queryID] = {"parameters": queryParameters, "estimate": None}
 
-        self.queryID += 1
+        # small timeout
         messagebox.showinfo("Request Sent", "Request sent to Kafka Topic", parent=self.frame)
 
     def create_widgets(self):
@@ -248,7 +290,6 @@ class QuerySpatial:
 
     def start_kafka_consumer(self):
         def consume_messages():
-
             queryCounter = 0
             props = {
                 'bootstrap.servers': 'localhost:9092',
@@ -274,16 +315,18 @@ class QuerySpatial:
                     message = msg.value().decode('utf-8')
 
                     m = json.loads(message)
-                    print(m)
+                    if m['synopsisID'] != 30:
+                        continue
                     estimate = m["estimation"]
-                    print("Received message: {}".format(estimate))
-                    self.queries[queryCounter]["estimate"] = estimate
-                    self.entry_widgets["Estimate:"].insert(customtkinter.END, "\n" + "Query " + str(queryCounter) +
-                                                           " with parameters: " +
-                                                           str(self.queries[queryCounter]["parameters"]) +
-                                                           " | estimate: " + str(estimate))
+                    param = m["param"]
 
+                    self.entry_widgets["Estimate:"].insert(customtkinter.END,
+                                                               "\n" + "Query " + str(queryCounter) +
+                                                               " with parameters: " +
+                                                               str(param) +
+                                                               " | estimate: " + str(estimate))
                     self.entry_widgets["Estimate:"].see(customtkinter.END)
+
                     queryCounter += 1
 
             except KeyboardInterrupt:
@@ -309,14 +352,6 @@ class QuerySpatial:
         for syn in self.App.existing_synopses:
             if self.App.existing_synopses[syn]["synopsisID"] == "30":
                 self.scrollable_frame.add_item(self.App.existing_synopses[syn])
-            #
-            # "uid: {} | synID: {} | Dataset: {} | StreamID: {} | NoOfP: {} | Parameters: {}".format(
-            #                                           self.App.existing_synopses[syn]['uid'],
-            #                                           self.App.existing_synopses[syn]['synopsisID'],
-            #                                           self.App.existing_synopses[syn]['dataSetkey'],
-            #                                           self.App.existing_synopses[syn]['streamID'],
-            #                                           self.App.existing_synopses[syn]['noOfP'],
-            #                                           self.App.existing_synopses[syn]['param']))
 
     def load_existing_synopses(self):
         self.button_load_synopses.destroy()
@@ -340,11 +375,14 @@ class QuerySpatial:
     def setCurSynopsis(self, syn):
         self.curDatasetKey = syn['dataSetkey']
         self.curStreamID = syn['streamID']
+
+        self.curU_name = syn['u_name']
         self.curUID = syn['uid']
         self.curSynopsisID = syn['synopsisID']
         self.curNoOfP = syn['noOfP']
         self.curParameters = syn['param']
 
+        print("Current selected synopsis: ", syn)
         # only for spatial synopses
         self.minX = syn['param'][-5]
         self.maxX = syn['param'][-4]

@@ -1,6 +1,10 @@
 import customtkinter
 import ast
 
+from datasetMap import DatasetMap
+from synMap import SynMap
+
+
 class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def __init__(self, master, item_list, command=None, **kwargs):
         super().__init__(master, **kwargs)
@@ -8,21 +12,45 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.command = command
         self.radiobutton_variable = customtkinter.StringVar()
         self.radiobutton_list = []
+        print("item_list", item_list)
         for i, item in enumerate(item_list):
-            self.add_item(item)
+            if 'u_name' in item:
+                self.add_item(item)
+            else:
+                self.add_item_dataset(item_list[item])
 
     def add_item(self, item):
-        text = ("Unique ID: {}\n"
-                "Synopsis ID: {}\n"
+        print("item", item)
+        print(SynMap.getSynName(SynMap(), int(item['synopsisID'])))
+        text = ("Unique Name: {}\n"
+                "Synopsis Type: {}\n"
                 "Dataset: {} \n"
                 "Stream ID: {} \n"
                 "Number of Parallelization: {} \n"
                 "Synopsis specific parameters: {}").format(
-                                                      item['uid'],
-                                                      item['synopsisID'],
+                                                      item['u_name'],
+                                                      SynMap.getSynName(SynMap(), int(item['synopsisID'])),
                                                       item['dataSetkey'], item['streamID'],
                                                       item['noOfP'],
                                                       item['param'])
+
+        radiobutton = customtkinter.CTkRadioButton(self, text=text, value=item, variable=self.radiobutton_variable)
+        if self.command is not None:
+            radiobutton.configure(command=self.command)
+        radiobutton.grid(row=len(self.radiobutton_list), column=0, pady=(0, 10))
+        self.radiobutton_list.append(radiobutton)
+
+    def add_item_dataset(self, item):
+        print(item)
+        text = ("DatasetKey: {}\n"
+                "Dataset: {} \n"
+                "Stream ID: {} \n").format(item['DatasetKey'],item['DatasetName'], item['StreamID'])
+        if item['minX'] is not None:
+            text += "MinX: {} \n".format(item['minX'])
+            text += "MaxX: {} \n".format(item['maxX'])
+            text += "MinY: {} \n".format(item['minY'])
+            text += "MaxY: {} \n".format(item['maxY'])
+            text += "Max Resolution: {} \n".format(item['maxResolution'])
 
         radiobutton = customtkinter.CTkRadioButton(self, text=text, value=item, variable=self.radiobutton_variable)
         if self.command is not None:

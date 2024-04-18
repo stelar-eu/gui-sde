@@ -60,7 +60,6 @@ class Request:
 
     @classmethod
     def from_string(cls, line):
-        print(line)
         return ast.literal_eval(line)
         # tokens = line.split(",")
         # key = tokens[0]

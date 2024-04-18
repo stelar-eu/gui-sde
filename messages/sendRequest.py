@@ -2,7 +2,7 @@ from confluent_kafka import Producer
 import json
 
 from messages.Request import Request
-
+import hashlib
 
 class SendRequest:
 #     def __init__(self):
@@ -15,20 +15,26 @@ class SendRequest:
 #         self.parameters = []
 
     def __init__(self, par, synParameters, App):
+        # self.uid = None
         self.requestID = int(par[0])
         self.datasetKey = par[1]
         self.streamID = par[2]
-        self.uid = int(par[3])
+        self.u_name = par[3]
         self.synID = int(par[4])
         self.noOfP = int(par[5])
+        self.synCount = int(par[6])
         self.parameters = synParameters
         self.App = App
 
-    def __init__(self, requestID, datasetKey, streamID, uid, synID, noOfP, synParameters, App):
+    def __init__(self, requestID, datasetKey, streamID, u_name, uid, synID, noOfP, synParameters, App):
         self.requestID = requestID
         self.datasetKey = datasetKey
         self.streamID = streamID
-        self.uid = uid
+        self.u_name = u_name
+        if (requestID == 1):
+            self.uid = None
+        else:
+            self.uid = uid
         self.synID = synID
         self.noOfP = noOfP
         self.parameters = synParameters
@@ -53,19 +59,24 @@ class SendRequest:
             "uid": self.uid,
             "streamID": self.streamID,
             "param": self.parameters,
-            "noOfP": self.noOfP
+            "noOfP": self.noOfP,
+            "u_name": self.u_name
         }
+
         if self.requestID == 1:
+            request['uid'] = int(hashlib.sha256(request['u_name'].encode('utf-8')).hexdigest(), 16) % 10**8
             self.App.add_synopsis(request)
         elif self.requestID == 2:
             self.App.delete_synopsis(request)
 
-        rq = Request(self.datasetKey, self.requestID, self.synID, self.uid, self.streamID, self.parameters, self.noOfP)
+        rq = Request(self.datasetKey, self.requestID, self.synID, request['uid'],
+                     self.streamID, self.parameters, self.noOfP)
         # Serializing Request object to JSON
         #request_json = json.dumps(request)
-
+        print("Request: ", rq.to_json())
         producer.produce(topic_requests, key=rq.key_to_kafka(), value=rq.to_json())
         producer.flush()
+
         print("Request sent to Kafka Topic")
 
     def set_req_parameters(self, parameters):

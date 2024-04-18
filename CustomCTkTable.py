@@ -32,7 +32,7 @@ class CTkTable(customtkinter.CTkFrame):
             border_color: str or tuple = None,
             font: tuple = None,
             header_color: str or tuple = None,
-            corner_radius: int = 25,
+            corner_radius: int = 0,
             write: str = False,
             command=None,
             anchor: str = "c",
@@ -140,26 +140,26 @@ class CTkTable(customtkinter.CTkFrame):
                     tr = self.border_color
                 else:
                     tr = ""
-                if i == 0 and j == 0:
-                    corners = [tr, fg, fg, fg]
-                    hover_modify = self.hover
-
-                elif i == self.rows - 1 and j == self.columns - 1:
-                    corners = [fg, fg, tr, fg]
-                    hover_modify = self.hover
-
-                elif i == self.rows - 1 and j == 0:
-                    corners = [fg, fg, fg, tr]
-                    hover_modify = self.hover
-
-                elif i == 0 and j == self.columns - 1:
-                    corners = [fg, tr, fg, fg]
-                    hover_modify = self.hover
-
-                else:
-                    corners = [fg, fg, fg, fg]
-                    corner_radius = 0
-                    hover_modify = False
+                # if i == 0 and j == 0:
+                #     corners = [tr, fg, fg, fg]
+                #     hover_modify = self.hover
+                #
+                # elif i == self.rows - 1 and j == self.columns - 1:
+                #     corners = [fg, fg, tr, fg]
+                #     hover_modify = self.hover
+                #
+                # elif i == self.rows - 1 and j == 0:
+                #     corners = [fg, fg, fg, tr]
+                #     hover_modify = self.hover
+                #
+                # elif i == 0 and j == self.columns - 1:
+                #     corners = [fg, tr, fg, fg]
+                #     hover_modify = self.hover
+                #
+                # else:
+                corners = [fg, fg, fg, fg]
+                corner_radius = 0
+                hover_modify = False
 
                 if i == 0:
                     pady = (0, self.pady)
