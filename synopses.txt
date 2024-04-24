@@ -1,1 +1,0 @@
-{'key': 'D1', 'dataSetkey': 'D1', 'requestID': 1, 'synopsisID': '30', 'uid': 20334184, 'streamID': 'S1', 'param': ['DATE', 'RR', 'Queryable', 'DATE;RR;Queryable;0.002;0.99;1', '1', '-100000', '350000', '350000', '650000', '16'], 'noOfP': '16', 'u_name': 'demo_sketch'}

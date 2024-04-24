@@ -41,7 +41,6 @@ class CreateSynFrame:
         # Basic sketch parameters
         self.parametersBasic = None
 
-
         # copy synopsis frame
         self.frame = self.App.frames["frame2"]
 
@@ -76,11 +75,11 @@ class CreateSynFrame:
 
         label_UID = customtkinter.CTkLabel(self.dataEntry, text="Unique Name")
         label_UID.grid(row=self.data_entry_row, column=0, padx=20, pady=(10, 10))
-        self.u_name = customtkinter.CTkEntry(master=self.dataEntry, placeholder_text="UID")
+        self.u_name = customtkinter.CTkEntry(master=self.dataEntry, placeholder_text="Unique Name")
         self.u_name.grid(row=self.data_entry_row, column=1, padx=20, pady=(10, 10))
         self.data_entry_row += 1
 
-        label_SynopsisID = customtkinter.CTkLabel(self.dataEntry, text="SynopsisID")
+        label_SynopsisID = customtkinter.CTkLabel(self.dataEntry, text="Query Type - Synopsis Name")
         label_SynopsisID.grid(row=self.data_entry_row, column=0, padx=20, pady=(10, 10))
 
         # default is countmin:
@@ -91,10 +90,10 @@ class CreateSynFrame:
         self.synopsis_type_dropdown.grid(row=self.data_entry_row, column=1, padx=20, pady=(10, 10))
         self.data_entry_row += 1
 
-        label_NoOfP = customtkinter.CTkLabel(self.dataEntry, text="Number of partitions")
-        label_NoOfP.grid(row=self.data_entry_row, column=0, padx=20, pady=(10, 10))
-        self.NoOfP = customtkinter.CTkEntry(master=self.dataEntry, placeholder_text="16")
-        self.NoOfP.grid(row=self.data_entry_row, column=1, padx=20, pady=(10, 10))
+        # label_NoOfP = customtkinter.CTkLabel(self.dataEntry, text="Number of partitions")
+        # label_NoOfP.grid(row=self.data_entry_row, column=0, padx=20, pady=(10, 10))
+        # self.NoOfP = customtkinter.CTkEntry(master=self.dataEntry, placeholder_text="16")
+        # self.NoOfP.grid(row=self.data_entry_row, column=1, padx=20, pady=(10, 10))
         self.data_entry_row += 1
 
         self.dataEntry.grid(row=0, column=0, padx=(20, 20), pady=(20, 0), sticky="nsew")
@@ -134,9 +133,9 @@ class CreateSynFrame:
         #
         # synID = self.SynopsisID.get()
 
-        if self.synopsis_type_dropdown.get() == "" or self.u_name.get() == "" or self.NoOfP.get() == "":
+        if self.synopsis_type_dropdown.get() == "" or self.u_name.get() == "":
             if isinstance(self.datasetKey, str) or isinstance(self.streamID, str):
-                if self.datasetKey == "" or self.streamID == "" or self.u_name.get() == "" or self.NoOfP.get() == "":
+                if self.datasetKey == "" or self.streamID == "" or self.u_name.get() == "":
                     messagebox.showerror("Error", "Please fill in all fields", parent=self.frame)
             elif self.datasetKey.get() == "" or self.streamID.get() == "":
                 messagebox.showerror("Error", "Please fill in all fields", parent=self.frame)
@@ -148,7 +147,7 @@ class CreateSynFrame:
             messagebox.showerror("Error", "Unique Name {} already exists".format(self.u_name.get()), parent=self.frame)
             return
 
-        if self.synopsis_type_dropdown.get() == "SpatialSketch":
+        if self.synopsis_type_dropdown.get() == "Spatial Queries - SpatialSketch":
             # in spatial sketch, have to choose basic sketch
             self.choose_basic_sketch()
         else:
@@ -158,7 +157,7 @@ class CreateSynFrame:
                 self.parameters = customtkinter.CTkEntry(master=self.frame, width=250, placeholder_text="Parameters")
                 self.parameters.grid(row=1, column=0, padx=20, pady=(10, 10))
 
-            self.bt_send_synopsis_request = customtkinter.CTkButton(self.frame, text="Send synopsis request",
+            self.bt_send_synopsis_request = customtkinter.CTkButton(self.frame, text="Create Synopsis",
                                                          height=50, command=self.send_request)
             self.bt_send_synopsis_request.grid(row=2, column=0, padx=20, pady=(10, 10))
 
@@ -179,7 +178,7 @@ class CreateSynFrame:
     def spatial_sketch_parameters(self):
         self.bt_choose_basic_sketch.configure(text="Reselect Basic Sketch")
 
-        syn = self.synMap["SpatialSketch"]
+        syn = self.synMap["Spatial Queries - SpatialSketch"]
         self.basic_sketch_name = self.basic_sketch_dropdown.get()
         # self.basic_sketch_syn_id.destroy()
         # self.label_basic_sketch_synid.destroy()
@@ -197,6 +196,7 @@ class CreateSynFrame:
         i = 0
         parameters = []
         for param in syn["parameters"]:
+            default_param = ""
             if param == "keyField" or param == "valueField" or param == "operationMode":
                 # Will be selected by basic sketch
                 continue
@@ -208,7 +208,12 @@ class CreateSynFrame:
                 continue
             label = customtkinter.CTkLabel(self.parameters, text=param, font=customtkinter.CTkFont(size=14))
             label.grid(row=i+1, column=0, padx=20, pady=(10, 10))
-            entry = customtkinter.CTkEntry(master=self.parameters, placeholder_text=param)
+
+            if param == "maxResolution":
+                default_param = "16"
+
+            stringVar = customtkinter.StringVar(value=default_param)
+            entry = customtkinter.CTkEntry(master=self.parameters, placeholder_text=param, textvariable=stringVar)
             entry.grid(row=i+1, column=1, padx=20, pady=(10, 10))
             parameters.append(entry)
             i += 1
@@ -219,6 +224,7 @@ class CreateSynFrame:
                                                 font=customtkinter.CTkFont(size=15, weight="bold"))
         label_synopsis.grid(row=0, column=0, padx=20, pady=(10, 10), sticky="nsew")
         for i, param in enumerate(basicSyn["parameters"]):
+            default_param = ""
             label = customtkinter.CTkLabel(self.parametersBasic, text=param, font=customtkinter.CTkFont(size=14))
             label.grid(row=i + 1, column=0, padx=20, pady=(10, 10))
             if (param == "keyField" or param == "valueField") and self.App.current_dataset is not None:
@@ -226,8 +232,16 @@ class CreateSynFrame:
                 dropdown = customtkinter.CTkComboBox(master=self.parametersBasic, values=self.App.current_dataset["parameters"])
                 dropdown.grid(row=i + 1, column=1, padx=20, pady=(10, 10))
             else:
-                print("param", param)
-                entry = customtkinter.CTkEntry(master=self.parametersBasic, placeholder_text=param)
+                if param == "operationMode":
+                    default_param = "Queryable"
+                elif param == "epsilon":
+                    default_param = "0.002"
+                elif param == "confidence":
+                    default_param = "0.99"
+                elif param == "seed":
+                    default_param = "1"
+                stringVar = customtkinter.StringVar(value=default_param)
+                entry = customtkinter.CTkEntry(master=self.parametersBasic, placeholder_text=default_param, textvariable=stringVar)
                 entry.grid(row=i + 1, column=1, padx=20, pady=(10, 10))
 
         self.parametersBasic.get = lambda: ";".join([e.get() for e in self.parametersBasic.winfo_children()
@@ -236,7 +250,7 @@ class CreateSynFrame:
         # overwrite self.parameters.get() to return a string of parameters seperated by ", "
         self.parameters.get = lambda: ", ".join([e.get() for e in self.parameters.winfo_children() if isinstance(e, customtkinter.CTkEntry)])
 
-        self.bt_send_synopsis_request = customtkinter.CTkButton(self.frame, text="Send synopsis request",
+        self.bt_send_synopsis_request = customtkinter.CTkButton(self.frame, text="Create Synopsis",
                                                                 height=50, command=self.send_request)
         self.bt_send_synopsis_request.grid(row=3, column=0, padx=20, pady=(10, 10))
 
@@ -250,14 +264,16 @@ class CreateSynFrame:
             label = customtkinter.CTkLabel(self.parameters, text=param, font=customtkinter.CTkFont(size=14))
             label.grid(row=i + 1, column=0, padx=20, pady=(10, 10))
             if (param == "keyField" or param == "valueField") and self.App.current_dataset is not None:
-                dropdown = customtkinter.CTkComboBox(master=self.parameters, values=self.App.current_dataset["parameters"])
+                dropdown = customtkinter.CTkComboBox(master=self.parameters, values=self.App.current_dataset["parameters"],
+                                                     variable=customtkinter.StringVar(value=self.App.current_dataset["parameters"][0]))
                 dropdown.grid(row=i + 1, column=1, padx=20, pady=(10, 10))
             else:
                 entry = customtkinter.CTkEntry(master=self.parameters, placeholder_text=param)
                 entry.grid(row=i+1, column=1, padx=20, pady=(10, 10))
 
         # overwrite self.parameters.get() to return a string of parameters seperated by ", "
-        self.parameters.get = lambda: ", ".join([e.get() for e in self.parameters.winfo_children() if isinstance(e, customtkinter.CTkEntry)])
+        self.parameters.get = lambda: ", ".join([e.get() for e in self.parameters.winfo_children() if (isinstance(e, customtkinter.CTkEntry)
+                                                                                                       or isinstance(e, customtkinter.CTkComboBox))])
 
     def send_request(self):
         # 1 because requestId 1 is creating a synopsis.
@@ -265,7 +281,7 @@ class CreateSynFrame:
             messagebox.showerror("Error", "Please fill in all fields", parent=self.frame)
             return
         synParameters = self.parameters.get().split(", ")
-        if self.synopsis_type_dropdown.get() == "SpatialSketch":
+        if self.synopsis_type_dropdown.get() == "Spatial Queries - SpatialSketch":
             synBasicParameters = self.parametersBasic.get()
             synParameters = self.get_correct_parameters(synParameters, synBasicParameters)
 
@@ -279,13 +295,14 @@ class CreateSynFrame:
         else:
             req_streamID = self.streamID.get()
 
+        print("parallelization", self.App.parallelization.get())
 
         rq = SendRequest(1, req_datasetKey, req_streamID, self.u_name.get(), None,
                          self.set_synopsis_id(self.synopsis_type_dropdown.get()),
-                         self.NoOfP.get(), synParameters, self.App)
+                         self.App.parallelization.get(), synParameters, self.App)
 
         rq.send_request_to_kafka_topic()
-        messagebox.showinfo("Request Sent", "Request sent to Kafka Topic", parent=self.frame)
+        messagebox.showinfo("Synopsis Created", "Synopsis successfully created.", parent=self.frame)
 
     def get_correct_parameters(self, synParameters, synBasicParameters):
         basic_parameters = synBasicParameters.split(";")

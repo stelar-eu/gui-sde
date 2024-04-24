@@ -8,7 +8,7 @@ class DatasetMap:
                                        "maxY": 650000,
                                        "maxResolution": 128,
                                        "queryParameters": ["Date (YYYYMMDD)"],
-                                       "parameters": ["DATE", "RR"]}}
+                                       "parameters": ["Date", "Rainfall (mm)"]}}
         # self.synMap["1"] = {"name": "CountMin", "parameters": ["keyField", "valueField", "operationMode", "epsilon",
         #                                                      "confidence", "seed"]}
         #

@@ -49,9 +49,9 @@ class DatasetManagement:
         # select dataset name from list
         self.bt_load_datasets = customtkinter.CTkButton(master=self.frame, text="Load Datasets",
                                                         command=self.load_datasets)
-        self.bt_load_datasets.place(relx=0.75, rely=0.2, anchor=customtkinter.CENTER)
+        self.bt_load_datasets.place(relx=0.5, rely=0.5, anchor=customtkinter.CENTER)
 
-        self.new_dataset()
+        #self.new_dataset()
 
     def load_datasets(self):
         self.App.dataset_filename = "dataset.txt"
@@ -60,9 +60,9 @@ class DatasetManagement:
 
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
                                                            item_list=self.App.existing_datasets,
-                                                           label_text="Select Dataset", width=650,
-                                                           height=400, fg_color="#000811", command=self.select_dataset)
-        self.scrollable_frame.place(relx=0.75, rely=0.5, anchor=customtkinter.CENTER)
+                                                           label_text="Select Dataset", width=1000,
+                                                           height=750, fg_color="#000811", command=self.select_dataset)
+        self.scrollable_frame.place(relx=0.5, rely=0.5, anchor=customtkinter.CENTER)
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
         self.reload_existing_datasets()

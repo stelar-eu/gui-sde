@@ -109,16 +109,18 @@ class QueryNormal:
 
     def send_request(self):
         print("data entry is: ", self.dataEntry.get())
-        basicSketchQueryParameters = self.dataEntry.get().replace(" ", "").split(",") + "1".split(",")
+        basicSketchQueryParameters = self.dataEntry.get().replace(" ", "").split(",")# + "1".split(",")
+        queryParameters = [None] * len(basicSketchQueryParameters)
+        for i, v in enumerate(basicSketchQueryParameters):
+            queryParameters[i] = v
 
-        queryParameters = [basicSketchQueryParameters[0], basicSketchQueryParameters[1]]
 
         rq = SendRequest(3, self.curDatasetKey, self.curStreamID, self.curU_name, self.curUID, self.curSynopsisID,
                          self.curNoOfP, queryParameters, self.App)
         rq.send_request_to_kafka_topic()
 
         # small timeout
-        messagebox.showinfo("Request Sent", "Request sent to Kafka Topic", parent=self.frame)
+        messagebox.showinfo("Query Successful", "Query successfully submitted.", parent=self.frame)
 
     def create_widgets(self):
 
@@ -170,7 +172,7 @@ class QueryNormal:
                     message = msg.value().decode('utf-8')
 
                     m = json.loads(message)
-                    if m['synopsisID'] != 30:
+                    if m['synopsisID'] == 30:
                         continue
                     estimate = m["estimation"]
                     param = m["param"]

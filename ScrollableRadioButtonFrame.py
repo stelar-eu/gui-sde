@@ -23,12 +23,14 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         print("item", item)
         print(SynMap.getSynName(SynMap(), int(item['synopsisID'])))
         text = ("Unique Name: {}\n"
+                "Query Type: {}\n"
                 "Synopsis Type: {}\n"
                 "Dataset: {} \n"
                 "Stream ID: {} \n"
                 "Number of Parallelization: {} \n"
                 "Synopsis specific parameters: {}").format(
                                                       item['u_name'],
+                                                        SynMap.getQueryType(SynMap(), int(item['synopsisID'])),
                                                       SynMap.getSynName(SynMap(), int(item['synopsisID'])),
                                                       item['dataSetkey'], item['streamID'],
                                                       item['noOfP'],

@@ -16,6 +16,8 @@ from QuerySpatial import QuerySpatial
 from DatasetManagement import DatasetManagement
 from datasetMap import DatasetMap
 
+from PIL import Image, ImageTk, ImageOps
+
 from messages.Request import Request
 
 
@@ -71,7 +73,7 @@ class App(customtkinter.CTk):
         self.u_nameToUID = {}
 
         # Window settings
-        self.title("Synopsis Data Engine")
+        self.title("STELAR Synopsis Data Engine")
         self.geometry("{0}x{0}+0+0".format(self.winfo_screenwidth(), self.winfo_screenheight()))
 
         # contains everything
@@ -95,6 +97,8 @@ class App(customtkinter.CTk):
         self.right_side_container = customtkinter.CTkFrame(self.right_side_panel, fg_color="#000811")
         self.right_side_container.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True, padx=0, pady=0)
 
+
+
         App.frames['frame1'] = customtkinter.CTkFrame(main_container)
         App.frames['frame2'] = customtkinter.CTkFrame(main_container)
         App.frames['frame3'] = customtkinter.CTkFrame(main_container)
@@ -114,31 +118,36 @@ class App(customtkinter.CTk):
         label_data_topic = customtkinter.CTkLabel(sde_par_panel, text="Data Topic",
                                                   font=customtkinter.CTkFont(size=13, weight="bold"))
         label_data_topic.grid(row=1, column=0, padx=(20, 10), pady=10)
-        self.data_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="data_topic")
+        data_text = customtkinter.StringVar(value="data_topic")
+        self.data_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="data_topic", textvariable=data_text)
         self.data_topic.grid(row=1, column=1, padx=(10, 20), pady=10)
 
         label_request_topic = customtkinter.CTkLabel(sde_par_panel, text="Request Topic",
                                                      font=customtkinter.CTkFont(size=13, weight="bold"))
         label_request_topic.grid(row=2, column=0, padx=(20, 10), pady=10)
-        self.request_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="request_topic")
+        req_text = customtkinter.StringVar(value="request_topic")
+        self.request_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="request_topic", textvariable=req_text)
         self.request_topic.grid(row=2, column=1, padx=(10, 20), pady=10)
 
         label_OUT = customtkinter.CTkLabel(sde_par_panel, text="OUT",
                                            font=customtkinter.CTkFont(size=13, weight="bold"))
         label_OUT.grid(row=3, column=0, padx=(20, 10), pady=10)
-        self.OUT = customtkinter.CTkEntry(sde_par_panel, placeholder_text="OUT")
+        out_text = customtkinter.StringVar(value="OUT")
+        self.OUT = customtkinter.CTkEntry(sde_par_panel, placeholder_text="OUT", textvariable=out_text)
         self.OUT.grid(row=3, column=1, padx=(10, 20), pady=10)
 
         label_bootstrap = customtkinter.CTkLabel(sde_par_panel, text="Bootstrap Servers",
                                                  font=customtkinter.CTkFont(size=13, weight="bold"))
         label_bootstrap.grid(row=4, column=0, padx=(20, 10), pady=10)
-        self.bootstrap_servers = customtkinter.CTkEntry(sde_par_panel, placeholder_text="localhost:9092")
+        bs_text = customtkinter.StringVar(value="localhost:9092")
+        self.bootstrap_servers = customtkinter.CTkEntry(sde_par_panel, placeholder_text="localhost:9092", textvariable=bs_text)
         self.bootstrap_servers.grid(row=4, column=1, padx=(10, 20), pady=10)
 
         label_par = customtkinter.CTkLabel(sde_par_panel, text="Parallelization",
                                            font=customtkinter.CTkFont(size=13, weight="bold"))
         label_par.grid(row=5, column=0, padx=(20, 10), pady=10)
-        self.parallelization = customtkinter.CTkEntry(sde_par_panel, placeholder_text="16")
+        par_text = customtkinter.StringVar(value="16")
+        self.parallelization = customtkinter.CTkEntry(sde_par_panel, placeholder_text="16", textvariable=par_text)
         self.parallelization.grid(row=5, column=1, padx=(10, 20), pady=10)
 
         # filename of existing synopses
@@ -211,6 +220,15 @@ class App(customtkinter.CTk):
         sde_par_panel = customtkinter.CTkFrame(left_side_panel, width=100)
         sde_par_panel.grid(row=4, column=0, padx=(20, 10), pady=(50, 10))
         self.set_sde_par_panel(sde_par_panel)
+        # image of stelar
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_images")
+        img = Image.open(os.path.join(image_path, "Logo - Stelar project.jpg"))
+        # img = ImageOps.fit(img, (self.desiredSize, self.desiredSize))
+        img_width, img_height = img.size
+        stelar_img = customtkinter.CTkImage(img, size=(img_width, img_height))
+        label_image = customtkinter.CTkLabel(left_side_panel, text="", image=stelar_img)
+        label_image.image = stelar_img
+        label_image.grid(row=5, padx=(10, 20), pady=300, columnspan=2)
 
     def frame_selector(self, value):
         frame_number = 1

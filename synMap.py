@@ -33,102 +33,190 @@ class SynMap:
 # 30	Spatial Sketch	KEY, minX, maxX, minY, maxY	Count in spatial range	Count	KeyField, ValueField, OperationMode, BasicSketchParameters, BasicSketchSynopsisID, minX, maxX, minY, maxY, maxResolution
 # 31	OmniSketch	Attr1, Attr1Value, Attr2, Attr2Value, ...	Count with multi-dimensional predicates	Count	KeyField, ValueField, OperationMode, #Attributes, delta, epsilon, B, b, seed
 
-        self.synMap["CountMin"] = {"synID": 1,
-                                   "name": "CountMin",
-                                   "parameters": ["keyField", "valueField", "operationMode", "epsilon",
-                                                  "confidence", "seed"],
-                                   "basicSketch": True}
-        self.synMap["BloomFilter"] = {"synID": 2,
+        self.synMap["Frequency - CountMin"] = {"synID": 1,
+                                               "type": "Frequency",
+                                               "name": "CountMin",
+                                               "parameters": ["keyField", "valueField", "operationMode", "epsilon",
+                                                              "confidence", "seed"],
+                                               "basicSketch": True}
+        self.synMap["Membership - BloomFilter"] = {"synID": 2,
                                         "name": "BloomFilter",
+                                        "type": "Membership",
                                         "parameters": ["keyField", "valueField", "operationMode", "numberOfElements",
                                                          "FalsePositive"],
                                         "basicSketch": True}
-        self.synMap["AMS"] = {"synID": 3,
+        self.synMap["L2-Norm - AMS"] = {"synID": 3,
                                         "name": "AMS",
+                                        "type": "L2-Norm",
                                         "parameters": ["keyField", "valueField", "operationMode", "Depth", "Buckets"],
                                         "basicSketch": True}
-        self.synMap["DFT"] = {"synID": 4,
+        self.synMap["Fourier coefficients - DFT"] = {"synID": 4,
                                         "name": "DFT",
+                                        "type": "Fourier coefficients",
                                         "parameters": ["keyField", "valueField", "timeField", "operationMode",
                                                        "IntervalInSeconds",
                                                          "BasicWindowSizeInSeconds", "SlidingWindowSizeInSeconds", "#coefficients"],
                                         "basicSketch": True}
-        self.synMap["LSH"] = {"synID": 5,
+        self.synMap["Correlation - LSH"] = {"synID": 5,
                                         "name": "LSH",
+                                        "type": "Correlation",
                                         "parameters": ["keyField", "valueField", "operationMode", "windowSize",
                                                        "Dimensions", "numberOfBuckets"],
                                         "basicSketch": True}
-        self.synMap["Coresets"] = {"synID": 6,
+        self.synMap["Coresets - Coresets"] = {"synID": 6,
                                         "name": "Coresets",
+                                        "type": "Coresets",
                                         "parameters": ["keyField", "valueField", "operationMode", "maxBucketSize",
                                                        "dimensions"],
                                         "basicSketch": True}
-        self.synMap["FMSketch"] = {"synID": 7,
+        self.synMap["Cardinality - FMSketch"] = {"synID": 7,
                                         "name": "FMSketch",
+                                        "type": "Cardinality",
                                         "parameters": ["keyField", "valueField", "operationMode", "BitmapSize",
                                                        "epsilonRelativeError", "probabilityofFailure"],
                                         "basicSketch": True}
-        self.synMap["HyperLogLog"] = {"synID": 8,
+        self.synMap["Cardinality - HyperLogLog"] = {"synID": 8,
                                         "name": "HyperLogLog",
+                                        "type": "Cardinality",
                                         "parameters": ["keyField", "valueField", "operationMode", "rsd"],
                                         "basicSketch": True}
-        self.synMap["StickySampling"] = {"synID": 9,
+        self.synMap["FrequentItems - StickySampling"] = {"synID": 9,
                                         "name": "StickySampling",
+                                        "type": "FrequentItems",
                                         "parameters": ["keyField", "valueField", "operationMode", "support",
                                                        "epsilon", "probabilityofFailure"],
                                         "basicSketch": True}
-        self.synMap["LossyCounting"] = {"synID": 10,
+        self.synMap["FrequentItems - LossyCounting"] = {"synID": 10,
                                         "name": "LossyCounting",
+                                        "type": "FrequentItems",
                                         "parameters": ["keyField", "valueField", "operationMode", "epsilon"],
                                         "basicSketch": True}
-        self.synMap["ChainSampler"] = {"synID": 11,
+        self.synMap["Sampling - ChainSampler"] = {"synID": 11,
                                         "name": "ChainSampler",
+                                        "type": "Sampling",
                                         "parameters": ["keyField", "valueField", "operationMode", "sizeOfSample",
                                                        "sizeOfWindow"],
                                         "basicSketch": True}
-        self.synMap["GKQuantiles"] = {"synID": 12,
+        self.synMap["Quantile - GKQuantiles"] = {"synID": 12,
                                         "name": "GKQuantiles",
+                                        "type": "Quantile",
                                         "parameters": ["keyField", "valueField", "operationMode", "epsilon"],
                                         "basicSketch": True}
-        self.synMap["MarinetimeSKetch"] = {"synID": 13,
+        self.synMap["Sampling - MarinetimeSKetch"] = {"synID": 13,
                                         "name": "MarinetimeSKetch",
+                                        "type": "Sampling",
                                         "parameters": ["keyField", "valueField", "operationMode", "minSamplingPeriod",
                                                        "minimumDistance", "speed", "corse"],
                                         "basicSketch": True}
-        self.synMap["TopK"] = {"synID": 14,
+        self.synMap["TopK - TopK"] = {"synID": 14,
                                         "name": "TopK",
+                                        "type": "TopK",
                                         "parameters": ["keyField", "valueField", "operationMode", "numberOfK", "countDown"],
                                         "basicSketch": True}
-        self.synMap["OptimalDistributedWindowSampling"] = {"synID": 15,
+        self.synMap["Sampling - OptimalDistributedWindowSampling"] = {"synID": 15,
                                         "name": "OptimalDistributedWindowSampling",
+                                        "type": "Sampling",
                                         "parameters": ["keyField", "valueField", "operationMode", "windowSize"],
                                         "basicSketch": True}
-        self.synMap["OptimalDistributedSampling"] = {"synID": 16,
+        self.synMap["Sampling - OptimalDistributedSampling"] = {"synID": 16,
                                         "name": "OptimalDistributedSampling",
+                                        "type": "Sampling",
                                         "parameters": ["keyField", "valueField", "operationMode"],
                                         "basicSketch": True}
-        self.synMap["WindowedQuantiles"] = {"synID": 17,
+        self.synMap["Quantile - WindowedQuantiles"] = {"synID": 17,
                                         "name": "WindowedQuantiles",
+                                        "type": "Quantile",
                                         "parameters": ["keyField", "valueField", "operationMode", "epsilon", "windowSize"],
                                         "basicSketch": True}
-        self.synMap["RadiusSketchFamily"] = {"synID": 18,
+        self.synMap["Similarity - RadiusSketchFamily"] = {"synID": 18,
                                         "name": "RadiusSketchFamily",
+                                        "type": "Similarity",
                                         "parameters": ["keyField", "valueField", "operationMode", "groupSize",
                                                        "sketchSize", "windowSize", "numberOfGroups", "threshold"],
                                         "basicSketch": True}
-
-
-
-        self.synMap["SpatialSketch"] = {"synID": 30,
+        self.synMap["Spatial Queries - SpatialSketch"] = {"synID": 30,
                                         "name": "SpatialSketch",
+                                        "type": "Spatial Queries",
                                         "parameters": ["keyField", "valueField", "operationMode",
-                                                                      "BasicSketchParameters", "BasicSketchSynID",
-                                                                     "minX", "maxX", "minY", "maxY", "maxResolution"],
+                                                       "BasicSketchParameters", "BasicSketchSynID",
+                                                       "minX", "maxX", "minY", "maxY", "maxResolution"],
                                         "basicSketch": False}
-        self.synMap["OmniSketch"] = {"synID": 31,
-        "name": "OmniSketch",
-        "parameters": ["Attr1", "Attr1Value", "Attr2", "Attr2Value"],
-        "basicSketch": False}
+        self.synMap["Frequency with Multi-dimensional Predicates - OmniSketch"] = {"synID": 31,
+                                        "name": "OmniSketch",
+                                        "type": "Multi-dimensional Predicates",
+                                        "parameters": ["Attr1", "Attr1Value", "Attr2", "Attr2Value"],
+                                        "basicSketch": False}
+        # self.synMap["Coresets"] = {"synID": 6,
+        #                                 "name": "Coresets",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "maxBucketSize",
+        #                                                "dimensions"],
+        #                                 "basicSketch": True}
+        # self.synMap["FMSketch"] = {"synID": 7,
+        #                                 "name": "FMSketch",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "BitmapSize",
+        #                                                "epsilonRelativeError", "probabilityofFailure"],
+        #                                 "basicSketch": True}
+        # self.synMap["HyperLogLog"] = {"synID": 8,
+        #                                 "name": "HyperLogLog",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "rsd"],
+        #                                 "basicSketch": True}
+        # self.synMap["StickySampling"] = {"synID": 9,
+        #                                 "name": "StickySampling",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "support",
+        #                                                "epsilon", "probabilityofFailure"],
+        #                                 "basicSketch": True}
+        # self.synMap["LossyCounting"] = {"synID": 10,
+        #                                 "name": "LossyCounting",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "epsilon"],
+        #                                 "basicSketch": True}
+        # self.synMap["ChainSampler"] = {"synID": 11,
+        #                                 "name": "ChainSampler",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "sizeOfSample",
+        #                                                "sizeOfWindow"],
+        #                                 "basicSketch": True}
+        # self.synMap["GKQuantiles"] = {"synID": 12,
+        #                                 "name": "GKQuantiles",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "epsilon"],
+        #                                 "basicSketch": True}
+        # self.synMap["MarinetimeSKetch"] = {"synID": 13,
+        #                                 "name": "MarinetimeSKetch",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "minSamplingPeriod",
+        #                                                "minimumDistance", "speed", "corse"],
+        #                                 "basicSketch": True}
+        # self.synMap["TopK"] = {"synID": 14,
+        #                                 "name": "TopK",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "numberOfK", "countDown"],
+        #                                 "basicSketch": True}
+        # self.synMap["OptimalDistributedWindowSampling"] = {"synID": 15,
+        #                                 "name": "OptimalDistributedWindowSampling",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "windowSize"],
+        #                                 "basicSketch": True}
+        # self.synMap["OptimalDistributedSampling"] = {"synID": 16,
+        #                                 "name": "OptimalDistributedSampling",
+        #                                 "parameters": ["keyField", "valueField", "operationMode"],
+        #                                 "basicSketch": True}
+        # self.synMap["WindowedQuantiles"] = {"synID": 17,
+        #                                 "name": "WindowedQuantiles",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "epsilon", "windowSize"],
+        #                                 "basicSketch": True}
+        # self.synMap["RadiusSketchFamily"] = {"synID": 18,
+        #                                 "name": "RadiusSketchFamily",
+        #                                 "parameters": ["keyField", "valueField", "operationMode", "groupSize",
+        #                                                "sketchSize", "windowSize", "numberOfGroups", "threshold"],
+        #                                 "basicSketch": True}
+        #
+        #
+        #
+        # self.synMap["SpatialSketch"] = {"synID": 30,
+        #                                 "name": "SpatialSketch",
+        #                                 "parameters": ["keyField", "valueField", "operationMode",
+        #                                                               "BasicSketchParameters", "BasicSketchSynID",
+        #                                                              "minX", "maxX", "minY", "maxY", "maxResolution"],
+        #                                 "basicSketch": False}
+        # self.synMap["OmniSketch"] = {"synID": 31,
+        # "name": "OmniSketch",
+        # "parameters": ["Attr1", "Attr1Value", "Attr2", "Attr2Value"],
+        # "basicSketch": False}
 
     def getSynName(self, synID):
         # find name of the synopsis by their synID
@@ -148,3 +236,9 @@ class SynMap:
             if self.synMap[key]["basicSketch"]:
                 basicSketches[key] = self.synMap[key]
         return basicSketches
+
+    def getQueryType(self, param):
+        for key in self.synMap:
+            if self.synMap[key]["synID"] == param:
+                return self.synMap[key]["type"]
+        Exception("Synopsis ID not found")

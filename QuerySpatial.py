@@ -159,15 +159,13 @@ class QuerySpatial:
         self.grid_window_ctk.wm_attributes("-alpha", 0.4)
         grid_window = customtkinter.CTkFrame(self.grid_window_ctk)
 
-
-        print("sizeX: ", sizeX, "sizeY: ", sizeY)
-        print("resolution: ", self.resolution)
         self.table = CTkTable(master=grid_window, row=self.resolution,
                               column=self.resolution, width=self.desiredSize, height=self.desiredSize,
                               padx=0,
                               hover_color="#f0f0f0")
         self.table.grid(row=0, column=0, padx=0, pady=0)
         self.grid_window_ctk.bind("<Configure>", self.move_me)
+        self.img_window_ctk.attributes("-topmost", True)
         self.grid_window_ctk.attributes("-topmost", True)
 
         grid_window.pack(fill=tkinter.BOTH, expand=True, padx=0, pady=0)
@@ -263,7 +261,7 @@ class QuerySpatial:
         rq.send_request_to_kafka_topic()
 
         # small timeout
-        messagebox.showinfo("Request Sent", "Request sent to Kafka Topic", parent=self.frame)
+        messagebox.showinfo("Query Successful", "Query successfully submitted.", parent=self.frame)
 
     def create_widgets(self):
 
@@ -350,7 +348,7 @@ class QuerySpatial:
         if self.scrollable_frame is not None:
             self.scrollable_frame.delete_all_items()
         for syn in self.App.existing_synopses:
-            if self.App.existing_synopses[syn]["synopsisID"] == "30":
+            if self.App.existing_synopses[syn]["synopsisID"] == '30':
                 self.scrollable_frame.add_item(self.App.existing_synopses[syn])
 
     def load_existing_synopses(self):
