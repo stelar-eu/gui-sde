@@ -5,8 +5,8 @@ class Datapoint:
         if values is None:
             values = {}
 
-        self.DataSetkey = key
-        self.StreamID = stream_id
+        self.dataSetkey = key
+        self.streamID = stream_id
         self.values = values
 
     @classmethod
@@ -15,22 +15,22 @@ class Datapoint:
         return cls(key, stream_id, values)
 
     def value_to_kafka(self):
-        return f"\"{self.DataSetkey},{self.StreamID},{json.dumps(self.values)}\""
+        return f"\"{self.dataSetkey},{self.streamID},{json.dumps(self.values)}\""
 
     def key_to_kafka(self):
-        return f"\"{self.DataSetkey}\""
+        return f"\"{self.dataSetkey}\""
 
     def get_data_set_key(self):
-        return self.DataSetkey
+        return self.dataSetkey
 
     def set_data_set_key(self, key):
-        self.DataSetkey = key
+        self.dataSetkey = key
 
     def get_stream_id(self):
-        return self.StreamID
+        return self.streamID
 
     def set_stream_id(self, stream_id):
-        self.StreamID = stream_id
+        self.streamID = stream_id
 
     def get_values(self):
         return self.values
@@ -40,9 +40,10 @@ class Datapoint:
 
     def to_json_string(self):
         return json.dumps(self.__dict__)
-
+    def to_json(self):
+        return json.dumps(self.__dict__)
     def __str__(self):
-        return f"Datapoint{{DataSetkey='{self.DataSetkey}', StreamID='{self.StreamID}', values='{self.values}'}}"
+        return f"Datapoint{{dataSetkey='{self.dataSetkey}', streamID='{self.streamID}', values='{self.values}'}}"
 
 
 # Usage example:

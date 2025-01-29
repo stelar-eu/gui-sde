@@ -149,14 +149,14 @@ class QueryNormal:
         def consume_messages():
             queryCounter = 0
             props = {
-                'bootstrap.servers': 'localhost:9092',
-                'group.id': 'OUT',
+                'bootstrap.servers': self.App.sde_parameters["bootstrap_servers"],
+                'group.id': self.App.sde_parameters["output_topic"],
             }
 
             consumer = Consumer(props)
 
             try:
-                consumer.subscribe(['OUT'])
+                consumer.subscribe([self.App.sde_parameters['output_topic']])
 
                 while True:
                     msg = consumer.poll()

@@ -47,9 +47,9 @@ class DatasetManagement:
 
 
         # select dataset name from list
-        self.bt_load_datasets = customtkinter.CTkButton(master=self.frame, text="Load Datasets",
-                                                        command=self.load_datasets)
-        self.bt_load_datasets.place(relx=0.5, rely=0.5, anchor=customtkinter.CENTER)
+        # self.bt_load_datasets = customtkinter.CTkButton(master=self.frame, text="Load Datasets",
+        #                                                 command=self.load_datasets)
+        # self.bt_load_datasets.place(relx=0.5, rely=0.5, anchor=customtkinter.CENTER)
 
         #self.new_dataset()
 

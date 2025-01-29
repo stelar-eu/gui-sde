@@ -5,6 +5,7 @@ import tkinter
 import tkinter.messagebox
 from tkinter import messagebox
 
+import json
 import customtkinter
 
 import subprocess
@@ -13,7 +14,7 @@ from customtkinter import CTk
 from CreateSynFrame import CreateSynFrame
 from QueryNormal import QueryNormal
 from QuerySpatial import QuerySpatial
-from DatasetManagement import DatasetManagement
+from DataManagement import DataManagement
 from datasetMap import DatasetMap
 
 from PIL import Image, ImageTk, ImageOps
@@ -36,22 +37,25 @@ def add_to_file(data, filename):
         with open(filename, "w") as file:
             file.write(str(data) + "\n")
 
+def load_credentials(file_path):
+    with open(file_path, 'r') as file:
+        return json.load(file)
 
 class App(customtkinter.CTk):
     frames = {"frame1": None, "frame2": None, 'frame3': None, 'frame4': None}
 
     # Default parameters
-    sde_parameters = {"data_topic": "data_topic", "request_topic": "request_topic", "OUT": "OUT",
-                      "bootstrap_servers": "localhost:9092", "parallelization": "16",
-                      "syn_filename": "synopses.txt",
-                      "dataset_filename": "datasets.txt"}
+    # sde_parameters = {"data": "data", "requests": "requests", "outputs": "outputs", "logging": "logging",
+    #                   "bootstrap_servers": "parallelization": "2",
+    #                   "syn_filename": "synopses.txt",
+    #                   "dataset_filename": "datasets.txt"}
 
     def __init__(self):
         super().__init__()
 
         # Paths
         self.kafka_path = "/home/wieger/Desktop/Programs/kafka_2.11-2.2.0/"
-
+        self.credentials = load_credentials('credentials.json')
         # Buttons
         self.bt_start_sde = None
         self.seg_button = None
@@ -61,7 +65,8 @@ class App(customtkinter.CTk):
         self.bootstrap_servers = None
         self.data_topic = None
         self.request_topic = None
-        self.OUT = None
+        self.output_topic = None
+        self.logging_topic = None
         self.parallelization = None
         self.synFileName = None
 
@@ -104,11 +109,17 @@ class App(customtkinter.CTk):
         App.frames['frame3'] = customtkinter.CTkFrame(main_container)
         App.frames['frame4'] = customtkinter.CTkFrame(main_container)
 
-        self.frame1 = DatasetManagement(self)
+        self.frame1 = DataManagement(self)
         self.frame1.set_frame1()
         self.frame2 = CreateSynFrame(self)
         self.frame3 = QueryNormal(self)
         self.frame4 = QuerySpatial(self)
+
+        self.sde_parameters = {"data_topic": "data", "request_topic": "requests",
+                               "output_topic": "outputs", "logging_topic": "logging",
+                               "bootstrap_servers": self.credentials["kafka"]["bootstrap_servers"],
+                               "parallelization": "2", "syn_filename": "synopses.txt",
+                               "dataset_filename": "datasets.txt"}
 
     def set_sde_par_panel(self, sde_par_panel):
         label_kafka = customtkinter.CTkLabel(sde_par_panel, text="SDE Parameters",
@@ -125,30 +136,37 @@ class App(customtkinter.CTk):
         label_request_topic = customtkinter.CTkLabel(sde_par_panel, text="Request Topic",
                                                      font=customtkinter.CTkFont(size=13, weight="bold"))
         label_request_topic.grid(row=2, column=0, padx=(20, 10), pady=10)
-        req_text = customtkinter.StringVar(value="request_topic")
-        self.request_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="request_topic", textvariable=req_text)
+        req_text = customtkinter.StringVar(value="requests")
+        self.request_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="requests", textvariable=req_text)
         self.request_topic.grid(row=2, column=1, padx=(10, 20), pady=10)
 
-        label_OUT = customtkinter.CTkLabel(sde_par_panel, text="OUT",
+        label_OUT = customtkinter.CTkLabel(sde_par_panel, text="Output Topic",
                                            font=customtkinter.CTkFont(size=13, weight="bold"))
         label_OUT.grid(row=3, column=0, padx=(20, 10), pady=10)
-        out_text = customtkinter.StringVar(value="OUT")
-        self.OUT = customtkinter.CTkEntry(sde_par_panel, placeholder_text="OUT", textvariable=out_text)
-        self.OUT.grid(row=3, column=1, padx=(10, 20), pady=10)
+        out_text = customtkinter.StringVar(value="outputs")
+        self.output_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="outputs", textvariable=out_text)
+        self.output_topic.grid(row=3, column=1, padx=(10, 20), pady=10)
+
+        label_logging = customtkinter.CTkLabel(sde_par_panel, text="logging",
+                                           font=customtkinter.CTkFont(size=13, weight="bold"))
+        label_logging.grid(row=4, column=0, padx=(20, 10), pady=10)
+        logging_text = customtkinter.StringVar(value="logging")
+        self.logging_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="logging", textvariable=logging_text)
+        self.logging_topic.grid(row=4, column=1, padx=(10, 20), pady=10)
 
         label_bootstrap = customtkinter.CTkLabel(sde_par_panel, text="Bootstrap Servers",
                                                  font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_bootstrap.grid(row=4, column=0, padx=(20, 10), pady=10)
-        bs_text = customtkinter.StringVar(value="localhost:9092")
-        self.bootstrap_servers = customtkinter.CTkEntry(sde_par_panel, placeholder_text="localhost:9092", textvariable=bs_text)
-        self.bootstrap_servers.grid(row=4, column=1, padx=(10, 20), pady=10)
+        label_bootstrap.grid(row=5, column=0, padx=(20, 10), pady=10)
+        bs_text = customtkinter.StringVar(value=self.credentials["kafka"]["bootstrap_servers"])
+        self.bootstrap_servers = customtkinter.CTkEntry(sde_par_panel, placeholder_text=self.credentials["kafka"]["bootstrap_servers"], textvariable=bs_text)
+        self.bootstrap_servers.grid(row=5, column=1, padx=(10, 20), pady=10)
 
         label_par = customtkinter.CTkLabel(sde_par_panel, text="Parallelization",
                                            font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_par.grid(row=5, column=0, padx=(20, 10), pady=10)
-        par_text = customtkinter.StringVar(value="16")
-        self.parallelization = customtkinter.CTkEntry(sde_par_panel, placeholder_text="16", textvariable=par_text)
-        self.parallelization.grid(row=5, column=1, padx=(10, 20), pady=10)
+        label_par.grid(row=6, column=0, padx=(20, 10), pady=10)
+        par_text = customtkinter.StringVar(value="2")
+        self.parallelization = customtkinter.CTkEntry(sde_par_panel, placeholder_text="2", textvariable=par_text)
+        self.parallelization.grid(row=6, column=1, padx=(10, 20), pady=10)
 
         # filename of existing synopses
         # label_filename = customtkinter.CTkLabel(sde_par_panel, text="Filename Synopses",
@@ -159,31 +177,35 @@ class App(customtkinter.CTk):
 
         # create button to save the parameters
         bt_save = customtkinter.CTkButton(sde_par_panel, text="Connect to running SDE", command=self.save_parameters)
-        bt_save.grid(row=6, column=0, columnspan=2, padx=(20, 10), pady=10)
+        bt_save.grid(row=7, column=0, columnspan=2, padx=(20, 10), pady=10)
 
         self.bt_start_sde = customtkinter.CTkButton(sde_par_panel, text="Manually start SDE", command=self.start_sde)
-        self.bt_start_sde.grid(row=7, column=0, columnspan=2, padx=(20, 10), pady=10)
+        self.bt_start_sde.grid(row=8, column=0, columnspan=2, padx=(20, 10), pady=10)
 
     def save_parameters(self):
         if self.data_topic.get() == "":
-            self.sde_parameters["data_topic"] = "data_topic"
+            self.sde_parameters["data_topic"] = "data"
         else:
             self.sde_parameters["data_topic"] = self.data_topic.get()
         if self.request_topic.get() == "":
-            self.sde_parameters["request_topic"] = "request_topic"
+            self.sde_parameters["request_topic"] = "requests"
         else:
             self.sde_parameters["request_topic"] = self.request_topic.get()
-
-        if self.OUT.get() == "":
-            self.sde_parameters["OUT"] = "OUT"
+        if self.output_topic.get() == "":
+            self.sde_parameters["output_topic"] = "outputs"
         else:
-            self.sde_parameters["OUT"] = self.OUT.get()
+            self.sde_parameters["output_topic"] = self.output_topic.get()
+        if self.logging_topic.get() == "":
+            self.sde_parameters["logging_topic"] = "logging"
+        else:
+            self.sde_parameters["logging_topic"] = self.logging_topic.get()
         if self.bootstrap_servers.get() == "":
-            self.sde_parameters["bootstrap_servers"] = "localhost:9092"
+            # self.sde_parameters["bootstrap_servers"] = "localhost:9092"
+            self.sde_parameters["bootstrap_servers"] = self.credentials["kafka"]["bootstrap_servers"]
         else:
             self.sde_parameters["bootstrap_servers"] = self.bootstrap_servers.get()
         if self.parallelization.get() == "":
-            self.sde_parameters["parallelization"] = "16"
+            self.sde_parameters["parallelization"] = "2"
         else:
             self.sde_parameters["parallelization"] = self.parallelization.get()
         # if self.btSynFilename.get() == "":
@@ -205,7 +227,7 @@ class App(customtkinter.CTk):
             # start the SDE
             subprocess.check_call([self.kafka_path + 'sde_start_wp.sh',
                                    self.sde_parameters["data_topic"], self.sde_parameters["request_topic"],
-                                   self.sde_parameters["OUT"], self.sde_parameters["bootstrap_servers"],
+                                   self.sde_parameters["output_topic"], self.sde_parameters["bootstrap_servers"],
                                    self.sde_parameters["parallelization"],
                                    os.path.dirname(os.path.realpath(__file__)) + "/" + self.sde_parameters["syn_filename"]])
         except subprocess.CalledProcessError as e:
@@ -273,12 +295,12 @@ class App(customtkinter.CTk):
                     request = ast.literal_eval(line)
                     self.existing_synopses[request["u_name"]] = request
 
-    def read_datasets_from_file(self):
-        if os.path.isfile(self.sde_parameters["dataset_filename"]):
-            with open(self.sde_parameters["dataset_filename"], "r") as file:
-                for line in file:
-                    dataset = DatasetManagement.readDataset(line)
-                    self.existing_datasets[dataset['DatasetKey']] = dataset
+    # def read_datasets_from_file(self):
+        # if os.path.isfile(self.sde_parameters["dataset_filename"]):
+        #     with open(self.sde_parameters["dataset_filename"], "r") as file:
+        #         for line in file:
+        #             dataset = DataManagement.readDataset(line)
+        #             self.existing_datasets[dataset['DatasetKey']] = dataset
 
 
 if __name__ == "__main__":

@@ -144,7 +144,8 @@ class SynMap:
         self.synMap["Frequency with Multi-dimensional Predicates - OmniSketch"] = {"synID": 31,
                                         "name": "OmniSketch",
                                         "type": "Multi-dimensional Predicates",
-                                        "parameters": ["Attr1", "Attr1Value", "Attr2", "Attr2Value"],
+                                        "parameters": ["keyField", "valueField", "operationMode",
+                                                       "# Attributes", "Depth", "Width", "B", "b", "seed"],
                                         "basicSketch": False}
         # self.synMap["Coresets"] = {"synID": 6,
         #                                 "name": "Coresets",

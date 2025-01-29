@@ -41,9 +41,9 @@ class SendRequest:
         self.App = App
 
     def send_request_to_kafka_topic(self):
-        topic_requests = "request_topic"
+        topic_requests = self.App.sde_parameters["request_topic"]
 
-        bootstrap_servers = "localhost:9092"
+        bootstrap_servers = self.App.sde_parameters["bootstrap_servers"]
         conf = {
             'bootstrap.servers': bootstrap_servers,
         }
