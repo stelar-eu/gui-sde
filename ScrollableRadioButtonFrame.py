@@ -15,7 +15,8 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.item_dict = {}
 
         for i, item in enumerate(item_list):
-            if item.type == str and 'externalUID' in item:
+            print(item)
+            if isinstance(item, dict) and item.get('externalUID'):
                 self.add_item(item)
             else:
                 self.add_item_dataset(item)

@@ -63,19 +63,19 @@ class QueryNormal:
                                                  font=customtkinter.CTkFont(size=15, weight="bold"))
         label_dataEntry.grid(row=0, columnspan=4, padx=20, pady=(10, 10), sticky="nsew")
 
-        if self.App.current_synopses is None:
-            label = customtkinter.CTkLabel(self.dataEntry, text="Custom Parameters",
-                                           font=customtkinter.CTkFont(size=14))
-            label.grid(row=1, column=0, padx=20, pady=(10, 10))
-            entry = customtkinter.CTkEntry(master=self.dataEntry, width=250, placeholder_text="Query Parameters")
-            entry.grid(row=1, column=1, padx=20, pady=(10, 10))
-        else:
-            for i, label_text in enumerate(self.current_synopsis["param"]):
-                label = customtkinter.CTkLabel(self.dataEntry, text=label_text,
-                                               font=customtkinter.CTkFont(size=14))
-                label.grid(row=i + 1, column=0, padx=20, pady=(10, 10))
-                entry = customtkinter.CTkEntry(master=self.dataEntry, width=250, placeholder_text=label_text)
-                entry.grid(row=i + 1, column=1, padx=20, pady=(10, 10))
+        # if self.current_synopsis is None:
+        label = customtkinter.CTkLabel(self.dataEntry, text="Custom Parameters",
+                                       font=customtkinter.CTkFont(size=14))
+        label.grid(row=1, column=0, padx=20, pady=(10, 10))
+        entry = customtkinter.CTkEntry(master=self.dataEntry, width=250, placeholder_text="Query Parameters")
+        entry.grid(row=1, column=1, padx=20, pady=(10, 10))
+        # else:
+        #     for i, label_text in enumerate(self.current_synopsis["param"]):
+        #         label = customtkinter.CTkLabel(self.dataEntry, text=label_text,
+        #                                        font=customtkinter.CTkFont(size=14))
+        #         label.grid(row=i + 1, column=0, padx=20, pady=(10, 10))
+        #         entry = customtkinter.CTkEntry(master=self.dataEntry, width=250, placeholder_text=label_text)
+        #         entry.grid(row=i + 1, column=1, padx=20, pady=(10, 10))
         self.dataEntry.get = lambda: ", ".join([e.get() for e in self.dataEntry.winfo_children() if isinstance(e, customtkinter.CTkEntry)])
 
         # create a button to send the request to the kafka topic
@@ -104,7 +104,7 @@ class QueryNormal:
 
         rq_data = {
             "key": self.current_synopsis["dataSetkey"],
-            "streamID": self.current_synopsis["StreamID"],
+            "streamID": self.current_synopsis["streamID"],
             "synopsisID": self.current_synopsis["synopsisID"],
             "requestID": 3,
             "dataSetkey": self.current_synopsis["dataSetkey"],
@@ -168,7 +168,7 @@ class QueryNormal:
         self.App.read_syns_from_sde(self.dataset_entry.get())
 
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
-                                                           item_list=self.App.existing_synopses,
+                                                           item_list=self.App.existing_synopses.values(),
                                                            command=self.set_query_parameters,
                                                            label_text="Step 1: Load Existing Synopses", width=650,
                                                            height=400, fg_color="#000811")
@@ -185,7 +185,7 @@ class QueryNormal:
         self.App.read_syns_from_sde(self.dataset_entry.get())
 
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
-                                                           item_list=self.App.existing_synopses,
+                                                           item_list=self.App.existing_synopses.values(),
                                                            command=self.set_query_parameters,
                                                            label_text="Step 1: Load Existing Synopses", width=650,
                                                            height=400, fg_color="#000811")

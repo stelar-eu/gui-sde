@@ -50,15 +50,31 @@ def load_credentials(file_path):
 def extract_json_from_content(data):
     if data:
         content = data['content']
-        # Extract JSON-like structure from 'content'
-        match = re.search(r'Existing Synopsis: ({.*})', content, re.DOTALL)
-        if match:
-            json_str = match.group(1).replace('\n', '').replace(' ', '')
+        #
+        # content = data['content']
+        # # Extract JSON-like structure from 'content'
+        # # match = re.search(r'Existing Synopsis: ({.*})', content, re.DOTALL)
+        # match = re.search(r'Syn_({.*})', content, re.DOTALL)
+        #
+        # if match:
+        #     json_str = match.group(1).replace('\n', '').replace(' ', '')
+        #     try:
+        #         return json.loads(json_str)
+        #     except json.JSONDecodeError:
+        #         print("Invalid JSON structure in 'content'.")
+        # return None
+
+        matches = re.findall(r'Syn_\d+_\{(.*?)\}', content, re.DOTALL)
+        synopses = []
+
+        for match in matches:
+            json_str = '{' + match.strip().replace('\n', '').replace(' ', '') + '}'
             try:
-                return json.loads(json_str)
+                synopses.append(json.loads(json_str))
             except json.JSONDecodeError:
                 print("Invalid JSON structure in 'content'.")
-        return None
+
+        return synopses
 
 
 def read_metainfo_existing_datasets():
@@ -340,8 +356,11 @@ class App(customtkinter.CTk):
         resp = self.sde.send_request(req, "getListOfsynopses")
         if resp is None:
             messagebox.showinfo("Error", "Error loading synopses.", parent=self.frame)
-        request = extract_json_from_content(resp)
-        self.existing_synopses[request["externalUID"]] = request
+        print("Resp: ", resp)
+        synopses = extract_json_from_content(resp)
+        for syn in synopses:
+            print(syn)
+            self.existing_synopses[syn["externalUID"]] = syn
 
     # def read_datasets_from_file(self):
         # if os.path.isfile(self.sde_parameters["dataset_filename"]):
