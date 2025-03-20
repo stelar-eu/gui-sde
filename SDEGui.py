@@ -1,5 +1,6 @@
 import ast
 import os
+import re
 import threading
 import tkinter
 import tkinter.messagebox
@@ -16,6 +17,10 @@ from QueryNormal import QueryNormal
 from QuerySpatial import QuerySpatial
 from DataManagement import DataManagement
 from datasetMap import DatasetMap
+#
+from sde_py_lib.client import Client
+from stelar.client import Client as stelarClient
+from sde_py_lib.model import Synopsis, SynopsisSpec
 
 from PIL import Image, ImageTk, ImageOps
 
@@ -40,6 +45,41 @@ def add_to_file(data, filename):
 def load_credentials(file_path):
     with open(file_path, 'r') as file:
         return json.load(file)
+
+
+def extract_json_from_content(data):
+    if data:
+        content = data['content']
+        # Extract JSON-like structure from 'content'
+        match = re.search(r'Existing Synopsis: ({.*})', content, re.DOTALL)
+        if match:
+            json_str = match.group(1).replace('\n', '').replace(' ', '')
+            try:
+                return json.loads(json_str)
+            except json.JSONDecodeError:
+                print("Invalid JSON structure in 'content'.")
+        return None
+
+
+def read_metainfo_existing_datasets():
+    # Here, we read the datasets.txt file.
+    # The file should contain a list of dictionaries, each representing a dataset.
+    # Each dictionary should contain the following keys:
+    # - dataSetkey
+    # - DatasetName
+    # - StreamID
+    # - Attribute list
+
+    with open("datasets.txt", "r") as file:
+        datasets = file.readlines()
+        existing_datasets = {}
+        for d in datasets:
+            dataset = ast.literal_eval(d)
+
+            existing_datasets[dataset["dataSetkey"]] = dataset
+        return existing_datasets
+
+
 
 class App(customtkinter.CTk):
     frames = {"frame1": None, "frame2": None, 'frame3': None, 'frame4': None}
@@ -71,9 +111,8 @@ class App(customtkinter.CTk):
         self.synFileName = None
 
         self.existing_synopses = {}
-        self.existing_datasets = {}
+        self.existing_datasets = read_metainfo_existing_datasets()
 
-        self.current_dataset = None
         self.dsMap = DatasetMap.getDatasetMap(DatasetMap())
         self.u_nameToUID = {}
 
@@ -102,8 +141,6 @@ class App(customtkinter.CTk):
         self.right_side_container = customtkinter.CTkFrame(self.right_side_panel, fg_color="#000811")
         self.right_side_container.pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=True, padx=0, pady=0)
 
-
-
         App.frames['frame1'] = customtkinter.CTkFrame(main_container)
         App.frames['frame2'] = customtkinter.CTkFrame(main_container)
         App.frames['frame3'] = customtkinter.CTkFrame(main_container)
@@ -120,6 +157,18 @@ class App(customtkinter.CTk):
                                "bootstrap_servers": self.credentials["kafka"]["bootstrap_servers"],
                                "parallelization": "2", "syn_filename": "synopses.txt",
                                "dataset_filename": "datasets.txt"}
+
+        self.sde = Client("sde.petrounetwork.gr:19092", message_queue_size=20, response_timeout=10)
+        self.sde.send_storage_auth_request(self.credentials["klms"]["access_key"], self.credentials["klms"]["secret_key"],self.credentials["klms"]["session_token"], self.credentials["klms"]["endpoint"])
+
+        self.stelar_client = stelarClient(base_url=self.credentials['stelar_client']['url'],
+                                    username=self.credentials['stelar_client']['username'],
+                                    password=self.credentials['stelar_client']['password'])
+
+        # Selected dataset from MINIO
+        self.selected_dataset = None
+        self.current_dataset = None
+
 
     def set_sde_par_panel(self, sde_par_panel):
         label_kafka = customtkinter.CTkLabel(sde_par_panel, text="SDE Parameters",
@@ -273,27 +322,26 @@ class App(customtkinter.CTk):
             else:
                 App.frames[f"frame{i}"].pack_forget()
 
-    def add_synopsis(self, request):
-        self.existing_synopses[request["u_name"]] = request
-        add_to_file(request, self.sde_parameters["syn_filename"])
-
-    def add_dataset_to_existing(self, dataset):
-        self.existing_datasets[dataset["DatasetKey"]] = dataset
-        add_to_file(dataset, self.sde_parameters["dataset_filename"])
-
-    def delete_synopsis(self, request):
-        if request["u_name"] in self.existing_synopses:
-            del self.existing_synopses[request["u_name"]]
-        else:
-            messagebox.showinfo("Error", "Synopsis not found", parent=self.frame)
-
-    def read_syns_from_file(self):
-        if os.path.isfile(self.sde_parameters["syn_filename"]):
-            with open(self.sde_parameters["syn_filename"], "r") as file:
-                for line in file:
-                    print(line)
-                    request = ast.literal_eval(line)
-                    self.existing_synopses[request["u_name"]] = request
+    def read_syns_from_sde(self, dataset_key):
+        if dataset_key is None:
+            # warning: no dataset selected
+            messagebox.showinfo("No dataset selected", "Select dataset to load synopses.", parent=self.frame)
+        req = {
+            "key": dataset_key,
+            "streamID": "S1",
+            "synopsisID": 1,
+            "requestID": 777,
+            "dataSetkey": dataset_key,
+            "param": ["synopses"],
+            "noOfP": int(self.parallelization.get()),
+            "uid": 5,
+            "externalUID": "getListOfsynopses"
+        }
+        resp = self.sde.send_request(req, "getListOfsynopses")
+        if resp is None:
+            messagebox.showinfo("Error", "Error loading synopses.", parent=self.frame)
+        request = extract_json_from_content(resp)
+        self.existing_synopses[request["externalUID"]] = request
 
     # def read_datasets_from_file(self):
         # if os.path.isfile(self.sde_parameters["dataset_filename"]):

@@ -15,7 +15,7 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.item_dict = {}
 
         for i, item in enumerate(item_list):
-            if 'u_name' in item:
+            if item.type == str and 'externalUID' in item:
                 self.add_item(item)
             else:
                 self.add_item_dataset(item)
@@ -23,17 +23,19 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
     def add_item(self, item):
         item_str = str(item)
         self.item_dict[item_str] = item
-        text = ("Unique Name: {}\n"
+        text = ("External UID: {}\n"
                 "Query Type: {}\n"
                 "Synopsis Type: {}\n"
                 "Dataset: {} \n"
                 "Stream ID: {} \n"
+                "UID: {} \n"
                 "Number of Parallelization: {} \n"
                 "Synopsis specific parameters: {}").format(
-                                                      item['u_name'],
+                                                      item['externalUID'],
                                                         SynMap.getQueryType(SynMap(), int(item['synopsisID'])),
                                                       SynMap.getSynName(SynMap(), int(item['synopsisID'])),
                                                       item['dataSetkey'], item['streamID'],
+                                                    item['uid'],
                                                       item['noOfP'],
                                                       item['param'])
 
@@ -45,9 +47,15 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.radiobutton_list.append(radiobutton)
 
     def add_item_dataset(self, item):
-        item_str = str(item)
+
+
+        item_str = item.name
         self.item_dict[item_str] = item
-        text = item
+        text = ("DatasetKey: {}\n"
+                "Dataset: {} \n"
+                "Created: {} \n"
+                "URL: {} \n"
+                "tags: {}").format(item.id, item.name, item.metadata_created, item.url, item.tags)
         # text = ("DatasetKey: {}\n"
         #         "Dataset: {} \n"
         #         "Stream ID: {} \n").format(item['DatasetKey'],item['DatasetName'], item['StreamID'])

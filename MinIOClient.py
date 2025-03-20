@@ -31,3 +31,20 @@ class MinIOClient:
         except S3Error as err:
             print(f"Error occurred: {err}")
             return []
+
+    def get_object(self, bucket_name, object_name):
+        try:
+            data = self.client.get_object(bucket_name, object_name)
+            return data.read().decode("utf-8").split("\n")
+        except S3Error as err:
+            print(f"Error occurred: {err}")
+            return
+
+    def load_file_bucketname(self, bucket_name, file_name):
+        try:
+            response = self.client.get_object(bucket_name, file_name)
+            data = response.read().decode('utf-8')
+            return data.splitlines()  # Assuming each line is a record
+        except S3Error as err:
+            print(f"Error occurred: {err}")
+            return []

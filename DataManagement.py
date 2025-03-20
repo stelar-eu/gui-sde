@@ -2,15 +2,13 @@ from tkinter import messagebox
 
 import customtkinter
 
-from RRDatasetSender import RRDatasetSender
+from DataClient import DataClient
 from ScrollableRadioButtonFrame import ScrollableRadiobuttonFrame
-from MinIOClient import MinIOClient
+
 
 class DataManagement:
-    def __init__(self, App):
-        self.App = App
-        self.minio_client = MinIOClient(bucket_name="sde-bucket", credentials=self.App.credentials)
-        self.selected_dataset = None
+    def __init__(self, app):
+        self.App = app
         self.frame = self.App.frames["frame1"]
         self.scrollable_frame = None
 
@@ -27,7 +25,8 @@ class DataManagement:
                                                     command=self.load_datasets)
         self.bt_refresh.place(relx=0.6, rely=0.5, anchor=customtkinter.CENTER)
     def load_datasets(self):
-        datasets = self.minio_client.list_files()
+        datasets = self.App.stelar_client.datasets[:]
+
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
                                                            item_list=datasets,
                                                            label_text="Select Dataset", width=1000,
@@ -35,22 +34,16 @@ class DataManagement:
         self.scrollable_frame.place(relx=0.5, rely=0.5, anchor=customtkinter.CENTER)
         self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
-        self.bt_load_selected_dataset = customtkinter.CTkButton(master=self.frame, text="Load Selected Dataset",
-                                                                command=self.load_selected_dataset)
-        self.bt_load_selected_dataset.place(relx=0.5, rely=0.8, anchor=customtkinter.CENTER)
-
     def select_dataset(self):
-        self.selected_dataset = self.scrollable_frame.get_checked_item()
-
-    def load_selected_dataset(self):
-        if self.selected_dataset:
-            data = self.minio_client.load_file(self.selected_dataset)
-            rr = RRDatasetSender(data, self.App)
-            rr.send()
-            messagebox.showinfo("Info", "All data has been sent to the Kafka topic", master=self.frame)
-
-    def send_record_to_kafka(self, record):
-        # Implement the logic to send the record to Kafka using messages.Datapoint.py
+        self.App.selected_dataset = self.scrollable_frame.get_checked_item()
+        if self.App.selected_dataset:
+            # now look in self.App.existing_datasets for the selected dataset
+            if self.App.selected_dataset.name in self.App.existing_datasets:
+                self.App.current_dataset = self.App.existing_datasets[self.App.selected_dataset.name]
+            else:
+                # Need to add dataset to existing datasets
+                messagebox.showinfo("Error", f"Dataset {self.App.selected_dataset.name} not found in existing datasets")
+        messagebox.showinfo("Selected Dataset", f"Selected Dataset: {self.App.selected_dataset.name}")
 
 
-        print(record)
+
