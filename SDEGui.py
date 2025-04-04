@@ -13,14 +13,20 @@ import subprocess
 from customtkinter import CTk
 
 from CreateSynFrame import CreateSynFrame
+from MinIOClient import MinIOClient
 from QueryNormal import QueryNormal
-from QuerySpatial import QuerySpatial
+from QuerySpatialRefactor import QuerySpatialRefactor
 from DataManagement import DataManagement
 from datasetMap import DatasetMap
 #
 from sde_py_lib.client import Client
 from stelar.client import Client as stelarClient
 from sde_py_lib.model import Synopsis, SynopsisSpec
+
+from urllib.parse import urlparse
+
+from DataClient import DataClient
+from datetime import datetime
 
 from PIL import Image, ImageTk, ImageOps
 
@@ -117,14 +123,11 @@ class App(customtkinter.CTk):
         self.seg_button = None
         self.btSynFilename = None
 
+        self.bt_load_selected_dataset = None
         # Entries
         self.bootstrap_servers = None
         self.data_topic = None
-        self.request_topic = None
-        self.output_topic = None
-        self.logging_topic = None
         self.parallelization = None
-        self.synFileName = None
 
         self.existing_synopses = {}
         self.existing_datasets = read_metainfo_existing_datasets()
@@ -147,8 +150,8 @@ class App(customtkinter.CTk):
             values=["Dataset Management", "Create Synopsis", "Query Synopsis", "Query Spatial Synopsis"])
 
         # left side panel -> for frame selection
-        left_side_panel = customtkinter.CTkFrame(main_container, width=100)
-        self.set_left_side_panel(left_side_panel)
+        self.left_side_panel = customtkinter.CTkFrame(main_container, width=100)
+        self.set_left_side_panel()
 
         # right side panel -> to show the frame1 or frame 2
         self.right_side_panel = customtkinter.CTkFrame(main_container)
@@ -166,7 +169,7 @@ class App(customtkinter.CTk):
         self.frame1.set_frame1()
         self.frame2 = CreateSynFrame(self)
         self.frame3 = QueryNormal(self)
-        self.frame4 = QuerySpatial(self)
+        self.frame4 = QuerySpatialRefactor(self)
 
         self.sde_parameters = {"data_topic": "data", "request_topic": "requests",
                                "output_topic": "outputs", "logging_topic": "logging",
@@ -182,6 +185,8 @@ class App(customtkinter.CTk):
                                     password=self.credentials['stelar_client']['password'])
 
         # Selected dataset from MINIO
+
+        self.minio_client = MinIOClient(bucket_name="klms-bucket", credentials=self.credentials)
         self.selected_dataset = None
         self.current_dataset = None
 
@@ -198,40 +203,19 @@ class App(customtkinter.CTk):
         self.data_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="data_topic", textvariable=data_text)
         self.data_topic.grid(row=1, column=1, padx=(10, 20), pady=10)
 
-        label_request_topic = customtkinter.CTkLabel(sde_par_panel, text="Request Topic",
-                                                     font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_request_topic.grid(row=2, column=0, padx=(20, 10), pady=10)
-        req_text = customtkinter.StringVar(value="requests")
-        self.request_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="requests", textvariable=req_text)
-        self.request_topic.grid(row=2, column=1, padx=(10, 20), pady=10)
-
-        label_OUT = customtkinter.CTkLabel(sde_par_panel, text="Output Topic",
-                                           font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_OUT.grid(row=3, column=0, padx=(20, 10), pady=10)
-        out_text = customtkinter.StringVar(value="outputs")
-        self.output_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="outputs", textvariable=out_text)
-        self.output_topic.grid(row=3, column=1, padx=(10, 20), pady=10)
-
-        label_logging = customtkinter.CTkLabel(sde_par_panel, text="logging",
-                                           font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_logging.grid(row=4, column=0, padx=(20, 10), pady=10)
-        logging_text = customtkinter.StringVar(value="logging")
-        self.logging_topic = customtkinter.CTkEntry(sde_par_panel, placeholder_text="logging", textvariable=logging_text)
-        self.logging_topic.grid(row=4, column=1, padx=(10, 20), pady=10)
-
         label_bootstrap = customtkinter.CTkLabel(sde_par_panel, text="Bootstrap Servers",
                                                  font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_bootstrap.grid(row=5, column=0, padx=(20, 10), pady=10)
+        label_bootstrap.grid(row=2, column=0, padx=(20, 10), pady=10)
         bs_text = customtkinter.StringVar(value=self.credentials["kafka"]["bootstrap_servers"])
         self.bootstrap_servers = customtkinter.CTkEntry(sde_par_panel, placeholder_text=self.credentials["kafka"]["bootstrap_servers"], textvariable=bs_text)
-        self.bootstrap_servers.grid(row=5, column=1, padx=(10, 20), pady=10)
+        self.bootstrap_servers.grid(row=2, column=1, padx=(10, 20), pady=10)
 
-        label_par = customtkinter.CTkLabel(sde_par_panel, text="Parallelization",
-                                           font=customtkinter.CTkFont(size=13, weight="bold"))
-        label_par.grid(row=6, column=0, padx=(20, 10), pady=10)
-        par_text = customtkinter.StringVar(value="2")
-        self.parallelization = customtkinter.CTkEntry(sde_par_panel, placeholder_text="2", textvariable=par_text)
-        self.parallelization.grid(row=6, column=1, padx=(10, 20), pady=10)
+        label_parallel = customtkinter.CTkLabel(sde_par_panel, text="Parallelization",
+                                                font=customtkinter.CTkFont(size=13, weight="bold"))
+        label_parallel.grid(row=3, column=0, padx=(20, 10), pady=10)
+        parallel_text = customtkinter.StringVar(value="2")
+        self.parallelization = customtkinter.CTkEntry(sde_par_panel, placeholder_text="2", textvariable=parallel_text)
+        self.parallelization.grid(row=3, column=1, padx=(10, 20), pady=10)
 
         # filename of existing synopses
         # label_filename = customtkinter.CTkLabel(sde_par_panel, text="Filename Synopses",
@@ -242,28 +226,13 @@ class App(customtkinter.CTk):
 
         # create button to save the parameters
         bt_save = customtkinter.CTkButton(sde_par_panel, text="Connect to running SDE", command=self.save_parameters)
-        bt_save.grid(row=7, column=0, columnspan=2, padx=(20, 10), pady=10)
-
-        self.bt_start_sde = customtkinter.CTkButton(sde_par_panel, text="Manually start SDE", command=self.start_sde)
-        self.bt_start_sde.grid(row=8, column=0, columnspan=2, padx=(20, 10), pady=10)
+        bt_save.grid(row=4, column=0, columnspan=2, padx=(20, 10), pady=10)
 
     def save_parameters(self):
         if self.data_topic.get() == "":
             self.sde_parameters["data_topic"] = "data"
         else:
             self.sde_parameters["data_topic"] = self.data_topic.get()
-        if self.request_topic.get() == "":
-            self.sde_parameters["request_topic"] = "requests"
-        else:
-            self.sde_parameters["request_topic"] = self.request_topic.get()
-        if self.output_topic.get() == "":
-            self.sde_parameters["output_topic"] = "outputs"
-        else:
-            self.sde_parameters["output_topic"] = self.output_topic.get()
-        if self.logging_topic.get() == "":
-            self.sde_parameters["logging_topic"] = "logging"
-        else:
-            self.sde_parameters["logging_topic"] = self.logging_topic.get()
         if self.bootstrap_servers.get() == "":
             # self.sde_parameters["bootstrap_servers"] = "localhost:9092"
             self.sde_parameters["bootstrap_servers"] = self.credentials["kafka"]["bootstrap_servers"]
@@ -273,49 +242,43 @@ class App(customtkinter.CTk):
             self.sde_parameters["parallelization"] = "2"
         else:
             self.sde_parameters["parallelization"] = self.parallelization.get()
-        # if self.btSynFilename.get() == "":
-        self.sde_parameters["syn_filename"] = "synopses.txt"
-        # else:
-        #     self.sde_parameters["syn_filename"] = self.btSynFilename.get()
+        self.sde = Client(self.sde_parameters["bootstrap_servers"], message_queue_size=20, response_timeout=10)
+        response = self.sde.send_storage_auth_request(self.credentials["klms"]["access_key"],
+                                           self.credentials["klms"]["secret_key"],
+                                           self.credentials["klms"]["session_token"],
+                                           self.credentials["klms"]["endpoint"])
 
-    def start_sde(self):
-        self.save_parameters()
-        # Disable the button to prevent multiple clicks
-        self.bt_start_sde.configure(state=customtkinter.DISABLED)
+        self.stelar_client = stelarClient(base_url=self.credentials['stelar_client']['url'],
+                                          username=self.credentials['stelar_client']['username'],
+                                          password=self.credentials['stelar_client']['password'])
 
-        # Start the subprocess in a separate thread
-        thread = threading.Thread(target=self.run_bash_script)
-        thread.start()
+        if response is None:
+            messagebox.showinfo("Error", "Error connecting to SDE", parent=self.right_side_panel)
+            return
+        else:
+            messagebox.showinfo("Info", "Connected to running SDE", parent=self.right_side_panel)
 
-    def run_bash_script(self):
-        try:
-            # start the SDE
-            subprocess.check_call([self.kafka_path + 'sde_start_wp.sh',
-                                   self.sde_parameters["data_topic"], self.sde_parameters["request_topic"],
-                                   self.sde_parameters["output_topic"], self.sde_parameters["bootstrap_servers"],
-                                   self.sde_parameters["parallelization"],
-                                   os.path.dirname(os.path.realpath(__file__)) + "/" + self.sde_parameters["syn_filename"]])
-        except subprocess.CalledProcessError as e:
-            messagebox.showinfo("Error", "Error starting SDE", parent=self.frame)
-        finally:
-            self.bt_start_sde.configure(state=customtkinter.NORMAL)
-
-    def set_left_side_panel(self, left_side_panel):
-        left_side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y, expand=False, padx=10, pady=10)
+    def set_left_side_panel(self):
+        self.left_side_panel.pack(side=tkinter.LEFT, fill=tkinter.Y, expand=False, padx=10, pady=10)
 
         # create grid in leftside panel for kafka topics, filename of existing synopses
-        sde_par_panel = customtkinter.CTkFrame(left_side_panel, width=100)
+        sde_par_panel = customtkinter.CTkFrame(self.left_side_panel, width=100)
         sde_par_panel.grid(row=4, column=0, padx=(20, 10), pady=(50, 10))
         self.set_sde_par_panel(sde_par_panel)
+
+        self.bt_load_selected_dataset = customtkinter.CTkButton(master=self.left_side_panel, text="Send dataset from MINIO to SDE",
+                                                                command=self.load_selected_dataset)
+        self.bt_load_selected_dataset.grid(row=5,column=0,padx=(20,10), pady=(50,10))
+
         # image of stelar
         image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_images")
         img = Image.open(os.path.join(image_path, "Logo - Stelar project.jpg"))
         # img = ImageOps.fit(img, (self.desiredSize, self.desiredSize))
         img_width, img_height = img.size
         stelar_img = customtkinter.CTkImage(img, size=(img_width, img_height))
-        label_image = customtkinter.CTkLabel(left_side_panel, text="", image=stelar_img)
+        label_image = customtkinter.CTkLabel(self.left_side_panel, text="", image=stelar_img)
         label_image.image = stelar_img
-        label_image.grid(row=5, padx=(10, 20), pady=300, columnspan=2)
+        label_image.grid(row=6, padx=(10, 20), pady=300, columnspan=2)
 
     def frame_selector(self, value):
         frame_number = 1
@@ -338,10 +301,11 @@ class App(customtkinter.CTk):
             else:
                 App.frames[f"frame{i}"].pack_forget()
 
-    def read_syns_from_sde(self, dataset_key):
+    def read_syns_from_sde(self, dataset_key, spatial):
         if dataset_key is None:
             # warning: no dataset selected
-            messagebox.showinfo("No dataset selected", "Select dataset to load synopses.", parent=self.frame)
+            messagebox.showinfo("No dataset selected", "Select dataset to load synopses.", parent=self.right_side_panel)
+        self.existing_synopses = {}
         req = {
             "key": dataset_key,
             "streamID": "S1",
@@ -355,12 +319,39 @@ class App(customtkinter.CTk):
         }
         resp = self.sde.send_request(req, "getListOfsynopses")
         if resp is None:
-            messagebox.showinfo("Error", "Error loading synopses.", parent=self.frame)
+            messagebox.showinfo("Error", "Error loading synopses.", parent=self.right_side_panel)
         print("Resp: ", resp)
         synopses = extract_json_from_content(resp)
         for syn in synopses:
-            print(syn)
-            self.existing_synopses[syn["externalUID"]] = syn
+            if (spatial and syn['synopsisID'] == 30) or (not spatial and syn['synopsisID'] != 30):
+                self.existing_synopses[syn["externalUID"]] = syn
+
+    def load_selected_dataset(self):
+        if self.current_dataset:
+            resources = self.selected_dataset.resources
+            for res in resources:
+                if res.format != "Synopsis":
+                    self.get_data_from_url(res, self.current_dataset['dataSetkey'], self.current_dataset['StreamID'])
+            messagebox.showinfo("Info", "All data has been sent to the Kafka topic", master=self.right_side_panel)
+
+        else:
+            messagebox.showerror("Error", "Please select a dataset first.", parent=self.right_side_panel)
+
+    def parse_s3_url(self, s3_url):
+        parsed_url = urlparse(s3_url)
+        bucket_name = parsed_url.netloc  # Extracts 'klms-bucket'
+        object_path = parsed_url.path.lstrip('/')  # Extracts 'profile.txt'
+        return bucket_name, object_path
+
+    def get_data_from_url(self, res, dataSetkey, StreamID):
+        bucket_name, object_path = self.parse_s3_url(res.url)
+        data = self.minio_client.get_object(bucket_name, object_path)
+        start_time = datetime.now()
+        rr = DataClient(self, data, dataSetkey, res)
+        rr.send(dataSetkey, StreamID)
+        end_time = datetime.now()
+        print("Time taken to send data to Kafka: ", end_time - start_time)
+
 
     # def read_datasets_from_file(self):
         # if os.path.isfile(self.sde_parameters["dataset_filename"]):

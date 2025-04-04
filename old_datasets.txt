@@ -1,0 +1,2 @@
+{'DatasetKey': 'D1', 'DatasetName': 'Weather', 'StreamID': 'S1', 'minX': -100000, 'maxX': 350000, 'minY': 350000, 'maxY': 650000, 'maxResolution': 128, 'parameters': ['Date', 'Rainfall']}
+{'DatasetKey': 'D3', 'DatasetName': 'StockData', 'StreamID': 'S350', 'minX': None, 'maxX': None, 'minY': None, 'maxY': None, 'maxResolution': None, 'parameters': ['DATE', 'RR']}

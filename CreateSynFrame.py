@@ -3,12 +3,8 @@ from tkinter import messagebox
 import customtkinter
 # from messages.sendRequest import SendRequest
 from synMap import SynMap
-from DataClient import DataClient
-from urllib.parse import urlparse
-from datetime import datetime
 
 from MinIOClient import MinIOClient
-
 
 
 class CreateSynFrame:
@@ -40,16 +36,12 @@ class CreateSynFrame:
         self.bt_choose_basic_sketch = None
         self.bt_send_synopsis_request = None
 
-        self.bt_load_selected_dataset = None
-
         # Basic sketch name
         self.label_basic_sketch_synid = None
         self.basic_sketch_name = None
 
         # Basic sketch parameters
         self.parametersBasic = None
-
-        self.minio_client = MinIOClient(bucket_name="klms-bucket", credentials=self.App.credentials)
 
         # copy synopsis frame
         self.frame = self.App.frames["frame2"]
@@ -122,10 +114,6 @@ class CreateSynFrame:
 
         # make Request class with textboxes for datasetkey, streamID, UID, SynopsisID, NoOfP and parameters
         self.load_synopsis_parameters_frame()
-
-        self.bt_load_selected_dataset = customtkinter.CTkButton(master=self.frame, text="Load Selected Dataset",
-                                                                command=self.load_selected_dataset)
-        self.bt_load_selected_dataset.place(relx=0.5, rely=0.8, anchor=customtkinter.CENTER)
 
         self.App.frames["frame2"] = self.frame
 
@@ -337,8 +325,9 @@ class CreateSynFrame:
             "externalUID": "create: " + str(self.u_name.get())
         }
         answer = self.App.sde.send_request(rq_data, "create: " + str(self.u_name.get()))
-        self.App.stelar_client.resources.create(dataset=self.App.selected_dataset, name=f"Synopsis: {self.u_name.get()}",
-                                         description=rq_data, format="Synopsis")
+        self.App.stelar_client.resources.create(dataset=self.App.selected_dataset,
+                                                name=f"Synopsis: {self.u_name.get()}",
+                                                description=rq_data, format="Synopsis")
 
         # rq = SendRequest(1, req_datasetKey, req_streamID, self.u_name.get(), None,
         #                  self.set_synopsis_id(self.synopsis_type_dropdown.get()),
@@ -368,28 +357,3 @@ class CreateSynFrame:
         new_parameters = [basic_parameters[0], basic_parameters[1], basic_parameters[2], synBasicParameters,
                           str(self.basicSketchMap[self.basic_sketch_name]["synID"]), minX, maxX, minY, maxY, res]
         return new_parameters
-
-    def load_selected_dataset(self):
-        if self.App.current_dataset:
-            resources = self.App.selected_dataset.resources
-            for res in resources:
-                if res.format != "Synopsis":
-                    self.get_data_from_url(res, self.App.current_dataset['dataSetkey'], self.App.current_dataset['StreamID'])
-        else:
-            messagebox.showerror("Error", "Please select a dataset first.", parent=self.frame)
-
-    def parse_s3_url(self, s3_url):
-        parsed_url = urlparse(s3_url)
-        bucket_name = parsed_url.netloc  # Extracts 'klms-bucket'
-        object_path = parsed_url.path.lstrip('/')  # Extracts 'profile.txt'
-        return bucket_name, object_path
-
-    def get_data_from_url(self, res, dataSetkey, StreamID):
-        bucket_name, object_path = self.parse_s3_url(res.url)
-        data = self.minio_client.get_object(bucket_name, object_path)
-        start_time = datetime.now()
-        rr = DataClient(data, self.App, dataSetkey)
-        rr.send(dataSetkey, StreamID)
-        end_time = datetime.now()
-        print("Time taken to send data to Kafka: ", end_time - start_time)
-        messagebox.showinfo("Info", "All data has been sent to the Kafka topic", master=self.frame)

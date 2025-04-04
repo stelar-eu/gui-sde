@@ -48,8 +48,6 @@ class ScrollableRadiobuttonFrame(customtkinter.CTkScrollableFrame):
         self.radiobutton_list.append(radiobutton)
 
     def add_item_dataset(self, item):
-
-
         item_str = item.name
         self.item_dict[item_str] = item
         text = ("DatasetKey: {}\n"

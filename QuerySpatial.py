@@ -227,7 +227,6 @@ class QuerySpatial:
                         self.store_cell({"row": i, "column": j, "value": 1})
 
     def send_request(self):
-
         self.getSelectedCells()
         basicSketchQueryParameters = self.dataEntry.get().replace(" ", "").split(",") + "1".split(",")
         if len(basicSketchQueryParameters) != 2:

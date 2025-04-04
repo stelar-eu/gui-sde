@@ -1,14 +1,19 @@
+from urllib.parse import urlparse
+
 from messages.Datapoint import Datapoint
 import json
+
+from weatherData.MapLocations import MapLocations
 
 from kafka import KafkaProducer
 from kafka.errors import KafkaError
 
 class DataClient:
-    def __init__(self, data, App, name):
+    def __init__(self, App, data, name, res):
+        self.App = App
         self.data = data
         self.dataset_name = name
-        self.App = App
+        self.resource = res
         self.data_topic = self.App.sde_parameters["data_topic"]
 
         bootstrap_servers = self.App.sde_parameters["bootstrap_servers"]
@@ -29,9 +34,24 @@ class DataClient:
         dataSetkey = dataSetkey
         StreamID = StreamID
         if self.dataset_name == "synopses_experiment":
+            if self.resource.name == "stations_rr":
+                return
             self.send_rr(dataSetkey, StreamID)
 
     def send_rr(self, dataSetkey, StreamID):
+        # first get map locations file:
+        map_location_filename = "stations_rr"
+        ml = MapLocations()
+        resources = self.App.selected_dataset.resources
+        locations = None
+        for resource in resources:
+            if resource.name == map_location_filename:
+                bucket_name, object_path = self.App.parse_s3_url(resource.url)
+                locations = self.App.minio_client.get_object(bucket_name, object_path)
+                break
+        if locations:
+            ml.read_stations(locations)
+            ml.print_stats()
         if self.producer is None:
             self.producer = KafkaProducer(**self.conf)
 
@@ -40,13 +60,19 @@ class DataClient:
             if len(values) < 5:
                 continue
             staid = values[0].replace(' ', '')
+            x, y = ml.get_domain(int(staid))
             souid = values[1].replace(' ', '')
             date = values[2].replace(' ', '')
             rr = values[3].replace(' ', '')
             q_rr = values[4].replace(' ', '')
-            val = {"STAID": staid, "SOUID": souid, "DATE": int(date), "RR": int(rr), "Q_RR": q_rr}
+            val = {"x": x, "y": y, "SOUID": souid, "DATE": int(date), "RR": int(rr), "Q_RR": q_rr}
             datapoint = {"dataSetkey": dataSetkey, "streamID": StreamID, "values": val}
-            print(datapoint)
             self.producer.send(self.data_topic, value=datapoint, key=dataSetkey)
         self.producer.flush()
         self.producer.close()
+    #
+    # def parse_s3_url(self, s3_url):
+    #     parsed_url = urlparse(s3_url)
+    #     bucket_name = parsed_url.netloc  # Extracts 'klms-bucket'
+    #     object_path = parsed_url.path.lstrip('/')  # Extracts 'profile.txt'
+    #     return bucket_name, object_path
