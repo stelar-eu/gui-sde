@@ -117,7 +117,7 @@ class App(customtkinter.CTk):
 
         # Paths
         self.kafka_path = "/home/wieger/Desktop/Programs/kafka_2.11-2.2.0/"
-        self.credentials = load_credentials('credentials.json')
+        self.credentials = load_credentials('streamlitApp/credentials.json')
         # Buttons
         self.bt_start_sde = None
         self.seg_button = None
@@ -177,7 +177,8 @@ class App(customtkinter.CTk):
                                "parallelization": "2", "syn_filename": "synopses.txt",
                                "dataset_filename": "datasets.txt"}
 
-        self.sde = Client("sde.petrounetwork.gr:19092", message_queue_size=20, response_timeout=10)
+        self.sde = Client("sde.petrounetwork.gr:19092",
+                          message_queue_size=20, response_timeout=10)
         self.sde.send_storage_auth_request(self.credentials["klms"]["access_key"], self.credentials["klms"]["secret_key"],self.credentials["klms"]["session_token"], self.credentials["klms"]["endpoint"])
 
         self.stelar_client = stelarClient(base_url=self.credentials['stelar_client']['url'],
@@ -186,7 +187,8 @@ class App(customtkinter.CTk):
 
         # Selected dataset from MINIO
 
-        self.minio_client = MinIOClient(bucket_name="klms-bucket", credentials=self.credentials)
+        self.minio_client = MinIOClient(bucket_name="klms-bucket",
+                                        credentials=self.credentials)
         self.selected_dataset = None
         self.current_dataset = None
 
