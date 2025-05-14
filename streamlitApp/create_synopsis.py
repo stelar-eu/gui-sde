@@ -54,11 +54,11 @@ def create_synopsis():
     # Display the appropriate UI based on the selected stage
     if st.session_state.ui_stage == "choose_basic_sketch":
         choose_basic_sketch()
-    elif st.session_state.ui_stage == "spatial_sketch_parameters":
+    if st.session_state.ui_stage == "spatial_sketch_parameters":
         spatial_sketch_parameters(st.session_state.basic_sketch_name)
     elif st.session_state.ui_stage == "custom_parameters":
         custom_parameters(st.session_state.synMap[st.session_state.synopsis_type])
-    elif st.session_state.ui_stage == "done":
+    if st.session_state.ui_stage == "done":
         st.success("Synopsis successfully created!")
 
     # # Create Synopsis Button
@@ -175,8 +175,8 @@ def custom_parameters(syn):
         # Submit button for the form
         if st.form_submit_button("Create Synopsis"):
             st.session_state.form_submitted = True
-            syn_parameters = ", ".join([str(st.session_state.param_dict[f"custom_{param}"]) for param in
-                                        st.session_state.synMap[st.session_state.synopsis_type]["parameters"]])
+            syn_parameters = [str(st.session_state.param_dict[f"custom_{param}"]) for param in
+                                        st.session_state.synMap[st.session_state.synopsis_type]["parameters"]]
             send_request(syn_parameters)
             st.session_state.form_submitted = False
             st.session_state.ui_stage = "done"
@@ -227,11 +227,11 @@ def send_request(syn_parameters, basic_sketch_name=None):
         "param": syn_parameters,
         "noOfP": st.session_state.sde_parameters["parallelization"],
         "uid": st.session_state.u_name,
-        "externalUID": f"create: {st.session_state.u_name}",
+        "externalUID": f"create:{st.session_state.u_name}",
     }
 
     # Send request
-    response = st.session_state.sde.send_request(request_data, f"create: {st.session_state.u_name}")
+    response = st.session_state.sde.send_request(request_data, f"create:{st.session_state.u_name}")
     if response:
         st.success(f"Synopsis Created: {response}")
         st.session_state.existing_synopses[st.session_state.u_name] = request_data

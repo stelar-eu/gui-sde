@@ -20,12 +20,13 @@ def load_synopses():
         "requestID": 777,
         "dataSetkey": dataset["dataSetkey"],
         "param": ["synopses"],
-        "noOfP": int(st.session_state.get("parallelization", 1)),
+        "noOfP": st.session_state.sde_parameters["parallelization"],
         "uid": 5,
         "externalUID": "getListOfsynopses"
     }
 
     resp = st.session_state.sde.send_request(req, "getListOfsynopses")
+
     if resp is None:
         st.error("Error loading synopses.")
         return
@@ -36,6 +37,8 @@ def load_synopses():
 
     for syn in synopses:
         st.session_state.existing_synopses[syn["externalUID"]] = syn
+
+    st.session_state.ui_stage = "select_synopses_to_query"
 
 
 def extract_json_from_content(data):
@@ -60,19 +63,18 @@ def query_synopses():
 
         # Ensure required session state
         if st.button("Load Existing Synopses"):
-            st.session_state.existing_synopses = {"syn_1": {
-                "synopsisID": 30,
-                "dataSetkey": "synopses_experiment",
-                "streamID": "S1",
-                "noOfP": 2,
-                "uid": 5,
-                "param": ["key1", "key2"],
-                "externalUID": "syn_1"
-            }}
-            st.session_state.ui_stage = "select_synopses_to_query"
+            # st.session_state.existing_synopses = {"syn_1": {
+            #     "synopsisID": 30,
+            #     "dataSetkey": "synopses_experiment",
+            #     "streamID": "S1",
+            #     "noOfP": 2,
+            #     "uid": 5,
+            #     "param": ["key1", "key2"],
+            #     "externalUID": "syn_1"
+            # }}
             # example synopsis
-            # load_synopses()
-    elif st.session_state.get("ui_stage") == "select_synopses_to_query":
+            load_synopses()
+    if st.session_state.get("ui_stage") == "select_synopses_to_query":
         if "selected_synopsis_uid" not in st.session_state:
             st.session_state.selected_synopsis_uid = None
 
@@ -93,9 +95,9 @@ def query_synopses():
                 st.session_state.ui_stage = "spatial_query_parameters"
             else:
                 st.session_state.ui_stage = "regular_query_parameters"
-    elif st.session_state.ui_stage == "spatial_query_parameters":
+    if st.session_state.ui_stage == "spatial_query_parameters":
         show_spatial_query_form()
-    elif st.session_state.ui_stage == "regular_query_parameters":
+    if st.session_state.ui_stage == "regular_query_parameters":
         show_query_form()
     else:
         st.error("Invalid UI stage. Please reload the app.")
@@ -173,8 +175,8 @@ def show_spatial_query_form():
                     "externalUID": f"SpatialEstimate:{syn['uid']}"
                 }
 
-                # response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
-                response = {"content": "Spatial Estimate: 98765", "status": "success"}  # Mock
+                response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
+                # response = {"content": "Spatial Estimate: 98765", "status": "success"}  # Mock
 
                 if response:
                     st.success("Spatial query submitted successfully.")
@@ -263,11 +265,8 @@ def process_query_submission(uid):
     request_data = build_query_request(uid, param_list)
 
     # Simulated response – replace with actual call:
-    response = {
-        "content": "Estimate: 12345",
-        "status": "success"
-    }
-    # response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
+
+    response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
 
     if response:
         st.success("Query submitted successfully.")

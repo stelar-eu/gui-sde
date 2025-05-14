@@ -25,7 +25,7 @@ class App:
             }
         if "sde" not in st.session_state:
             st.session_state.sde = Client("sde.petrounetwork.gr:19092",
-                                      message_queue_size=20, response_timeout=10)
+                                      message_queue_size=20, response_timeout=20)
         if "stelar_client" not in st.session_state:
             st.session_state.stelar_client = stelarClient(
                 base_url=st.session_state.credentials['stelar_client']['url'],

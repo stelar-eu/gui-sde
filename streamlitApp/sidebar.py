@@ -12,7 +12,7 @@ def get_sidebar():
     st.session_state.sde_parameters = {
         "data_topic": "default_topic",
         "bootstrap_servers": "localhost:9092",
-        "parallelization": 1,
+        "parallelization": 2,
         "synopsis_spec": None,
         "synopsis": None,
         "dataset_key": None,
