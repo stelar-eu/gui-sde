@@ -99,8 +99,7 @@ def query_synopses():
         show_spatial_query_form()
     if st.session_state.ui_stage == "regular_query_parameters":
         show_query_form()
-    else:
-        st.error("Invalid UI stage. Please reload the app.")
+
 
 
 def extract_bounds(geojson):
@@ -193,7 +192,7 @@ def show_query_form():
     ensure_query_state(uid)
 
     with st.form(key=f"query_form_{uid}"):
-        render_synopsis_details(uid)
+        # render_synopsis_details(uid)
         st.session_state[f"query_params_{uid}"] = st.text_area(
             "Enter query parameters (comma-separated):",
             value=st.session_state[f"query_params_{uid}"],

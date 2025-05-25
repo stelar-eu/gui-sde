@@ -1,6 +1,8 @@
 import os
-
+from datetime import datetime
 import streamlit as st
+from DataClientStreamLit import DataClientStreamLit
+
 
 def get_sidebar():
     """
@@ -8,16 +10,8 @@ def get_sidebar():
     """
     st.sidebar.title("SDE Parameters")
 
-    # Initialize SDE parameters
-    st.session_state.sde_parameters = {
-        "data_topic": "default_topic",
-        "bootstrap_servers": "localhost:9092",
-        "parallelization": 2,
-        "synopsis_spec": None,
-        "synopsis": None,
-        "dataset_key": None,
-        "stream_id": None
-    }
+    if "sde_parameters" not in st.session_state:
+        st.error("SDE parameters not initialized. Please check your connection to the SDE.")
 
     st.session_state.sde_parameters["data_topic"] = st.sidebar.text_input(
         "Data Topic",
@@ -40,4 +34,26 @@ def get_sidebar():
             st.sidebar.success("Connected to running SDE")
         else:
             st.sidebar.error("Error connecting to SDE")
+    if st.sidebar.button("Send Data"):
+        if st.session_state.current_dataset:
+            resources = st.session_state.selected_dataset.resources
+            for res in resources:
+                if res.format != "Synopsis":
+                    get_data_from_url(
+                        res, st.session_state.current_dataset['dataSetkey'],
+                        st.session_state.current_dataset['StreamID'])
+            st.sidebar.success("All data has been sent to the Kafka topic")
+        else:
+            st.sidebar.error("No dataset selected")
+
     st.sidebar.image("./test_images/Logo - Stelar project.jpg")
+
+
+def get_data_from_url(res, dataSetkey, StreamID):
+    bucket_name, object_path = st.session_state.parse_s3_url(res.url)
+    data = st.session_state.minio_client.get_object(bucket_name, object_path)
+    start_time = datetime.now()
+    rr = DataClientStreamLit(data, dataSetkey, res)
+    rr.send(dataSetkey, StreamID)
+    end_time = datetime.now()
+    print("Time taken to send data to Kafka: ", end_time - start_time)

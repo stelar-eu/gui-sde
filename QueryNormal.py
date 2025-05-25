@@ -152,7 +152,7 @@ class QueryNormal:
                                                font=customtkinter.CTkFont(size=13, weight="bold"))
         label_dataset.grid(row=0, column=1, padx=(20, 0), pady=(50, 0))
         dataset_text = customtkinter.StringVar(value=self.App.selected_dataset.name)
-        self.dataset_entry= customtkinter.CTkEntry(self.frame, placeholder_text="2", textvariable=dataset_text)
+        self.dataset_entry = customtkinter.CTkEntry(self.frame, placeholder_text="2", textvariable=dataset_text)
         self.dataset_entry.grid(row=0, column=2, padx=(0, 20), pady=(50, 0))
 
         self.button_load_synopses = customtkinter.CTkButton(self.frame,

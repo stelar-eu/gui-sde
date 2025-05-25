@@ -11,12 +11,17 @@ import json
 class App:
     def __init__(self):
         if "credentials" not in st.session_state:
-            st.session_state.credentials = self.load_credentials('./streamlitApp/credentials.json')
+            st.text_input("Enter your credentials file path:",
+                          key="credentials_path", value="./streamlitApp/credentials_local.json")
+            # st.session_state.credentials = self.load_credentials('./streamlitApp/credentials.json')
+
+            st.session_state.credentials = self.load_credentials(st.session_state.credentials_path)
+
         if "sde_parameters" not in st.session_state:
             st.session_state.sde_parameters = {
                 "data_topic": "data",
-                "request_topic": "requests",
-                "output_topic": "outputs",
+                "request_topic": "request",
+                "output_topic": "estimation",
                 "logging_topic": "logging",
                 "bootstrap_servers": st.session_state.credentials["kafka"]["bootstrap_servers"],
                 "parallelization": "2",
@@ -24,7 +29,7 @@ class App:
                 "dataset_filename": "datasets.txt"
             }
         if "sde" not in st.session_state:
-            st.session_state.sde = Client("sde.petrounetwork.gr:19092",
+            st.session_state.sde = Client(st.session_state.sde_parameters["bootstrap_servers"],
                                       message_queue_size=20, response_timeout=20)
         if "stelar_client" not in st.session_state:
             st.session_state.stelar_client = stelarClient(

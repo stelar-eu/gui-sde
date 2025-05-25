@@ -58,6 +58,8 @@ def create_synopsis():
         spatial_sketch_parameters(st.session_state.basic_sketch_name)
     elif st.session_state.ui_stage == "custom_parameters":
         custom_parameters(st.session_state.synMap[st.session_state.synopsis_type])
+    if st.session_state.ui_stage == "no response":
+        st.error("No response from SDE. Please check your connection.")
     if st.session_state.ui_stage == "done":
         st.success("Synopsis successfully created!")
 
@@ -139,15 +141,16 @@ def spatial_sketch_parameters(basic_sketch_name):
             # Combine parameters
             syn_parameters = combine_parameters(syn_parameters, basic_parameters)
 
-            send_request(syn_parameters, basic_sketch_name)
+            response = send_request(syn_parameters, basic_sketch_name)
             st.session_state.form_submitted = False
-
-            st.session_state.ui_stage = "done"
+            if response is None:
+                st.session_state.ui_stage = "no response"
+            else:
+                st.session_state.ui_stage = "done"
 
 
 def custom_parameters(syn):
     dataset = st.session_state.current_dataset
-    st.write("dataset:", dataset)
     st.subheader(f"Parameters for {syn['name']}")
     if "param_dict" not in st.session_state:
         st.session_state.param_dict = {f"custom_{param}": "" for param in syn["parameters"]}
@@ -177,9 +180,12 @@ def custom_parameters(syn):
             st.session_state.form_submitted = True
             syn_parameters = [str(st.session_state.param_dict[f"custom_{param}"]) for param in
                                         st.session_state.synMap[st.session_state.synopsis_type]["parameters"]]
-            send_request(syn_parameters)
+            response = send_request(syn_parameters)
+            if response is None:
+                st.session_state.ui_stage = "no response"
+            else:
+                st.session_state.ui_stage = "done"
             st.session_state.form_submitted = False
-            st.session_state.ui_stage = "done"
 
 
 def combine_parameters(syn_parameters, basic_parameters):
@@ -235,5 +241,6 @@ def send_request(syn_parameters, basic_sketch_name=None):
     if response:
         st.success(f"Synopsis Created: {response}")
         st.session_state.existing_synopses[st.session_state.u_name] = request_data
+        return response
     else:
-        st.error("No response from server.")
+        return None

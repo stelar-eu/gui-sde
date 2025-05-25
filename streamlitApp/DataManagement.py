@@ -27,6 +27,7 @@ def load_datasets():
         if selected_dataset_name:
             if selected_dataset_name in st.session_state.existing_datasets:
                 st.session_state.current_dataset = st.session_state.existing_datasets[selected_dataset_name]
+                st.session_state.selected_dataset = st.session_state.stelar_client.datasets[selected_dataset_name]
                 st.success(f"Selected Dataset: {selected_dataset_name}")
             else:
                 st.error(f"Dataset {selected_dataset_name} not found in existing datasets")
