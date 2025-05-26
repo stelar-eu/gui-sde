@@ -30,9 +30,6 @@ def load_synopses():
     if resp is None:
         st.error("Error loading synopses.")
         return
-
-    st.write("Response:", resp)  # or use st.json(resp) for better formatting
-
     synopses = extract_json_from_content(resp)
 
     for syn in synopses:
@@ -93,7 +90,6 @@ def query_synopses():
             st.session_state.selected_synopsis_uid = uid
             if st.session_state.existing_synopses[uid]["synopsisID"] == 30:
                 st.session_state.ui_stage = "spatial_query_parameters"
-                print(st.session_state.existing_synopses[uid])
                 st.session_state.basic_sketch_to_query = st.session_state.existing_synopses[uid]["param"][4]
             else:
                 st.session_state.ui_stage = "regular_query_parameters"
@@ -216,15 +212,12 @@ def show_query_form():
     ensure_query_state(uid)
 
     with st.form(key=f"query_form_{uid}"):
-
-
         st.session_state[f"query_params_{uid}"] = st.text_area(
             "Enter query parameters (comma-separated):",
             value=st.session_state[f"query_params_{uid}"],
             key=f"query_input_{uid}"
         )
         if st.form_submit_button("Query Synopsis"):
-            st.write("Query submitted")
             st.session_state.query_submitted = True
             process_query_submission(uid)
 

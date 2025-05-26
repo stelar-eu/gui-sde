@@ -1,17 +1,12 @@
 
 
 import streamlit as st
-import json
-from datetime import datetime
-from DataClient import DataClient
-from datasetMap import DatasetMap
 
-from sde_py_lib.model import Synopsis, SynopsisSpec
 from DataManagement import dataset_management
-from streamlitApp.App import App
-from streamlitApp.create_synopsis import create_synopsis
-from streamlitApp.query_synopses import query_synopses
-from streamlitApp.sidebar import get_sidebar
+from App import App
+from create_synopsis import create_synopsis
+from query_synopses import query_synopses
+from sidebar import get_sidebar
 
 from urllib.parse import urlparse
 

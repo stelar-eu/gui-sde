@@ -130,7 +130,6 @@ def spatial_sketch_parameters(basic_sketch_name):
                 st.session_state.param_dict[f"basic_{param}"] = st.text_input(param, key=f"basic_{param}")
         # Submit button for the form
         if st.form_submit_button("Create Synopsis"):
-            st.write("Form submitted")
             st.session_state.form_submitted = True
             syn_parameters = [str(st.session_state.param_dict[f"spatial_{param}"]) for param in
                               st.session_state.synMap["Spatial Queries - SpatialSketch"]["parameters"]
@@ -168,11 +167,15 @@ def custom_parameters(syn):
                         key=f"custom_{param}",
                     )
             else:
-                # Text input for other parameters
+                # Prepare a default value based on the param
+                default_value = "Queryable" if param == "operationMode" else ""
+                # Initialize value in session state if not already present
+                st.session_state.param_dict.setdefault(f"custom_{param}", default_value)
+                # TODO: Queryable as default written in UI form as well.
                 st.session_state.param_dict[f"custom_{param}"] = st.text_input(
-                    param,
+                    label=param,
                     value=st.session_state.param_dict[f"custom_{param}"],
-                    key=f"custom_{param}",
+                    key=f"custom_{param}"
                 )
 
         # Submit button for the form
@@ -218,10 +221,6 @@ def combine_parameters(syn_parameters, basic_parameters):
 
 
 def send_request(syn_parameters, basic_sketch_name=None):
-    st.write("Sending request to SDE...")
-    # Collect parameters
-
-    st.write("dataset right now:", st.session_state.current_dataset)
 
     # Prepare request data
     request_data = {

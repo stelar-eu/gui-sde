@@ -12,7 +12,7 @@ class App:
     def __init__(self):
         if "credentials" not in st.session_state:
             st.text_input("Enter your credentials file path:",
-                          key="credentials_path", value="./streamlitApp/credentials_local.json")
+                          key="credentials_path", value="./credentials_local.json")
             # st.session_state.credentials = self.load_credentials('./streamlitApp/credentials.json')
 
             st.session_state.credentials = self.load_credentials(st.session_state.credentials_path)
@@ -68,7 +68,7 @@ class App:
         # - StreamID
         # - Attribute list
 
-        with open("datasets.txt", "r") as file:
+        with open("txt_files/datasets.txt", "r") as file:
             datasets = file.readlines()
             st.session_state.existing_datasets = {}
             for d in datasets:
