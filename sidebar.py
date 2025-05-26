@@ -46,8 +46,6 @@ def get_sidebar():
         else:
             st.sidebar.error("No dataset selected")
 
-    st.sidebar.image("./test_images/Logo - Stelar project.jpg")
-
 
 def get_data_from_url(res, dataSetkey, StreamID):
     bucket_name, object_path = st.session_state.parse_s3_url(res.url)

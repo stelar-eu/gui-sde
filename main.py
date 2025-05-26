@@ -12,8 +12,6 @@ from urllib.parse import urlparse
 
 # Initialize Streamlit app
 st.set_page_config(page_title="STELAR Synopsis Data Engine", layout="wide")
-st.title("STELAR Synopsis Data Engine")
-
 
 def parse_s3_url(s3_url):
     """
