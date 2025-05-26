@@ -93,6 +93,8 @@ def query_synopses():
             st.session_state.selected_synopsis_uid = uid
             if st.session_state.existing_synopses[uid]["synopsisID"] == 30:
                 st.session_state.ui_stage = "spatial_query_parameters"
+                print(st.session_state.existing_synopses[uid])
+                st.session_state.basic_sketch_to_query = st.session_state.existing_synopses[uid]["param"][4]
             else:
                 st.session_state.ui_stage = "regular_query_parameters"
     if st.session_state.ui_stage == "spatial_query_parameters":
@@ -101,17 +103,48 @@ def query_synopses():
         show_query_form()
 
 
-
 def extract_bounds(geojson):
-    coords = geojson["geometry"]["coordinates"][0]
-    lats = [pt[1] for pt in coords]
-    lons = [pt[0] for pt in coords]
-    return {
-        "minX": min(lons),
-        "maxX": max(lons),
-        "minY": min(lats),
-        "maxY": max(lats)
-    }
+    if not geojson or "geometry" not in geojson or not geojson["geometry"].get("coordinates"):
+        return None
+
+    try:
+        coords = geojson["geometry"]["coordinates"][0]
+        lats = [pt[1] for pt in coords]
+        lons = [pt[0] for pt in coords]
+        return {
+            "minX": min(lons),
+            "maxX": max(lons),
+            "minY": min(lats),
+            "maxY": max(lats)
+        }
+    except (IndexError, KeyError, TypeError):
+        st.error("Invalid GeoJSON format.")
+        return None
+
+def process_spatial_query_submission(uid):
+    raw_param = st.session_state[f"spatial_query_params_{uid}"]
+    if not raw_param.strip():
+        st.error("Please provide query parameters.")
+        return
+    basic_param_list = [str(x.strip()) for x in raw_param.split(",")]
+    region = st.session_state["spatial_filter_bounds"]
+    basic_sketch_id = st.session_state.basic_sketch_to_query
+    st.write("Basic Sketch ID:", basic_sketch_id)
+    spatial_params = [f"{region[k]:.5f}" for k in ["minX", "maxX", "minY", "maxY"]] + [basic_sketch_id]
+
+
+    param_list = spatial_params + basic_param_list
+    request_data = build_query_request(uid, param_list)
+
+    response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
+
+    if response:
+        st.success("Query submitted successfully.")
+        display_query_result(response, st.session_state.existing_synopses[uid])
+    else:
+        st.error("No response from server.")
+    st.session_state.query_submitted = False
+    st.session_state.ui_stage = "done"
 
 
 def show_spatial_query_form():
@@ -131,58 +164,49 @@ def show_spatial_query_form():
     ).add_to(m)
 
     Draw(export=True).add_to(m)
+    if "spatial_filter_bounds" in st.session_state:
+        b = st.session_state["spatial_filter_bounds"]
+        folium.Rectangle(
+            bounds=[[b["minY"], b["minX"]], [b["maxY"], b["maxX"]]],
+            color="red", fill=True, fill_opacity=0.1, tooltip="Selected Region"
+        ).add_to(m)
+    # if "query_result" in st.session_state:
+    #     geojson = st.session_state.query_result.get("geojson")
+    #     if geojson:
+    #         folium.GeoJson(
+    #             geojson,
+    #             data=st.session_state.query_result.get("estimate", {}),
+    #             name="Query Result",
+    #             style_function=lambda x: {
+    #                 'fillColor': 'green', 'color': 'green', 'weight': 2, 'fillOpacity': 0.5
+    #             }
+    #         ).add_to(m)
+
     map_data = st_folium(m, height=500, width=700)
 
     if map_data and "last_active_drawing" in map_data:
         region_bounds = extract_bounds(map_data["last_active_drawing"])
-        st.session_state["spatial_filter_bounds"] = region_bounds
-        st.success("Region selected!")
+        if region_bounds:
+            st.session_state["spatial_filter_bounds"] = region_bounds
+            st.success("Region selected!")
+            # Show query input form
+            st.write("Selected region bounds:", region_bounds)
+            st.session_state["region_selected"] = True
 
-        # Show query input form
-        st.write("Selected region bounds:", region_bounds)
+    if st.session_state.get("region_selected", False):
         with st.form(key=f"spatial_query_form_{uid}"):
-            raw_param = st.text_area(
-                "Enter additional query parameters (comma-separated):",
+            st.session_state[f"spatial_query_params_{uid}"] = st.text_area(
+                "Enter spatial query parameters (comma-separated):",
+                value=st.session_state.get(f"spatial_query_params_{uid}", ""),
                 key=f"spatial_query_input_{uid}"
             )
-
-            if st.form_submit_button("Query Synopsis"):
-                if not raw_param.strip():
-                    st.error("Please provide query parameters.")
-                    return
-
-                param_list = [x.strip() for x in raw_param.split(",")]
-
-                # Add spatial filtering parameters
-                region = st.session_state["spatial_filter_bounds"]
-                spatial_params = [
-                    f"minX={region['minX']}",
-                    f"maxX={region['maxX']}",
-                    f"minY={region['minY']}",
-                    f"maxY={region['maxY']}"
-                ]
-
-                request_data = {
-                    "key": syn["dataSetkey"],
-                    "streamID": syn["streamID"],
-                    "synopsisID": syn["synopsisID"],
-                    "requestID": 4,
-                    "dataSetkey": syn["dataSetkey"],
-                    "param": spatial_params + param_list,
-                    "noOfP": syn["noOfP"],
-                    "uid": syn["uid"],
-                    "externalUID": f"SpatialEstimate:{syn['uid']}"
-                }
-
-                response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
-                # response = {"content": "Spatial Estimate: 98765", "status": "success"}  # Mock
-
-                if response:
-                    st.success("Spatial query submitted successfully.")
-                    display_query_result(response, syn)
-                    st.session_state.ui_stage = "done"
-                else:
-                    st.error("No response from server.")
+            if "spatial_filter_bounds" not in st.session_state:
+                st.error("Please select a region before submitting the query.")
+            else:
+                if st.form_submit_button("Query Synopsis"):
+                    st.write("Spatial query submitted")
+                    st.session_state.query_submitted = True
+                    process_spatial_query_submission(uid)
 
 
 def show_query_form():
@@ -192,7 +216,8 @@ def show_query_form():
     ensure_query_state(uid)
 
     with st.form(key=f"query_form_{uid}"):
-        # render_synopsis_details(uid)
+
+
         st.session_state[f"query_params_{uid}"] = st.text_area(
             "Enter query parameters (comma-separated):",
             value=st.session_state[f"query_params_{uid}"],
@@ -204,22 +229,46 @@ def show_query_form():
             process_query_submission(uid)
 
 
+# def display_query_result(response, syn):
+#     st.subheader("Query Result")
+#
+#     st.markdown("### 🧮 Estimate Output")
+#     result_data = {
+#         "Estimate": response,
+#         "UID": syn["uid"],
+#         "Synopsis Type": syn["synopsisID"],
+#         "Dataset": syn["dataSetkey"],
+#         "Stream ID": syn["streamID"],
+#         "No of P": syn["noOfP"],
+#         "Parameters": ", ".join(syn["param"]) if isinstance(syn["param"], list) else str(syn["param"])
+#     }
+#
+#     for key, val in result_data.items():
+#         st.write(f"**{key}:** {val}")
+
 def display_query_result(response, syn):
     st.subheader("Query Result")
 
+    # 🎯 Big number display
     st.markdown("### 🧮 Estimate Output")
-    result_data = {
-        "Estimate": response,
-        "UID": syn["uid"],
-        "Synopsis Type": syn["synopsisID"],
-        "Dataset": syn["dataSetkey"],
-        "Stream ID": syn["streamID"],
-        "No of P": syn["noOfP"],
-        "Parameters": ", ".join(syn["param"]) if isinstance(syn["param"], list) else str(syn["param"])
-    }
+    st.metric(label="Estimated Result", value=response['estimation'])
 
-    for key, val in result_data.items():
-        st.write(f"**{key}:** {val}")
+    # 🗂️ Details as two-column layout
+    with st.container():
+        st.markdown("### 📋 Metadata")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown(f"**UID:** `{syn['uid']}`")
+            st.markdown(f"**Stream ID:** `{syn['streamID']}`")
+            st.markdown(f"**No of P:** `{syn['noOfP']}`")
+
+        with col2:
+            st.markdown(f"**Dataset:** `{syn['dataSetkey']}`")
+            st.markdown(f"**Synopsis Type:** `{syn['synopsisID']}`")
+            st.markdown(f"**Parameters:** `{', '.join(syn['param']) if isinstance(syn['param'], list) else syn['param']}`")
+
 
 
 def ensure_query_state(uid):
@@ -262,8 +311,6 @@ def process_query_submission(uid):
 
     param_list = [x.strip() for x in raw_param.split(",")]
     request_data = build_query_request(uid, param_list)
-
-    # Simulated response – replace with actual call:
 
     response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
 

@@ -132,11 +132,11 @@ def spatial_sketch_parameters(basic_sketch_name):
         if st.form_submit_button("Create Synopsis"):
             st.write("Form submitted")
             st.session_state.form_submitted = True
-            syn_parameters = [st.session_state.param_dict[f"spatial_{param}"] for param in
+            syn_parameters = [str(st.session_state.param_dict[f"spatial_{param}"]) for param in
                               st.session_state.synMap["Spatial Queries - SpatialSketch"]["parameters"]
                               if param not in basic_parameters]
             # basic_parameters as string with semicolon separator
-            basic_parameters = [f"{st.session_state.param_dict[f'basic_{param}']}" for param in
+            basic_parameters = [str(st.session_state.param_dict[f'basic_{param}']) for param in
                                 st.session_state.synMap[basic_sketch_name]["parameters"]]
             # Combine parameters
             syn_parameters = combine_parameters(syn_parameters, basic_parameters)
@@ -179,7 +179,7 @@ def custom_parameters(syn):
         if st.form_submit_button("Create Synopsis"):
             st.session_state.form_submitted = True
             syn_parameters = [str(st.session_state.param_dict[f"custom_{param}"]) for param in
-                                        st.session_state.synMap[st.session_state.synopsis_type]["parameters"]]
+                              st.session_state.synMap[st.session_state.synopsis_type]["parameters"]]
             response = send_request(syn_parameters)
             if response is None:
                 st.session_state.ui_stage = "no response"
@@ -213,8 +213,8 @@ def combine_parameters(syn_parameters, basic_parameters):
         syn_parameters[3],  # Example: maxY
         syn_parameters[4]  # Example: resolution
     ]
-    # Join the combined parameters with ", " as the delimiter
-    return ", ".join([str(param) for param in combined_parameters])
+
+    return [str(param) for param in combined_parameters]
 
 
 def send_request(syn_parameters, basic_sketch_name=None):
