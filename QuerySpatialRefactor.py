@@ -10,11 +10,12 @@ import threading
 from tkinter import messagebox, ttk
 
 from ScrollableRadioButtonFrame import ScrollableRadiobuttonFrame
-class QueryNormal:
+class QuerySpatialRefactor:
     frame = None
 
     def __init__(self, App):
         # App
+
         self.dataEntry = None
         self.current_synopsis = None
         self.num_queries = None
@@ -53,6 +54,17 @@ class QueryNormal:
         self.curMaxRow = None
         self.curMinRow = None
 
+        # Grid params
+        self.img_window_ctk = None
+        self.minY = -235
+        self.maxY = 345
+        self.minX = 22
+        self.maxX = 242
+        self.desiredSize = 1000
+        self.resolution = 16
+        self.grid_window_ctk = None
+        self.table = None
+
     def set_query_parameters(self):
         self.current_synopsis = self.scrollable_frame.get_checked_item()
         # self.setCurSynopsis(self.scrollable_frame.get_checked_item())
@@ -83,24 +95,54 @@ class QueryNormal:
                                                     command=self.send_request)
         bt_query_synopsis.grid(row=3, columnspan=2, padx=(20, 0), pady=(20, 20))
 
-    def set_frame3(self):
-        self.frame = self.App.frames["frame3"]
+    def set_frame4(self):
+        self.frame = self.App.frames["frame4"]
 
         # set title
         title = customtkinter.CTkLabel(self.frame, text="Query Synopsis",
                                        font=customtkinter.CTkFont(size=20, weight="bold"))
         title.place(relx=0.5, rely=0.02, anchor=customtkinter.CENTER)
         self.create_existing_synopsis_frame()
+        self.create_grid()
         self.create_widgets()
 
-        self.App.frames["frame3"] = self.frame
+        self.App.frames["frame4"] = self.frame
 
     def send_request(self):
-        print("data entry is: ", self.dataEntry.get())
+        self.getSelectedCells()
+
         basicSketchQueryParameters = self.dataEntry.get().replace(" ", "").split(",")# + "1".split(",")
-        queryParameters = [None] * len(basicSketchQueryParameters)
+
+
+        if len(self.selected_cells) == 0:
+            messagebox.showerror("Error", "Please select a grid", parent=self.frame)
+            return
+
+        # get dtypes of the parameters
+        self.minX = int(self.minX)
+        self.maxX = int(self.maxX)
+        self.minY = int(self.minY)
+        self.maxY = int(self.maxY)
+        # scale curMinRow, curMaxRow, curMinCol, curMaxCol to be absolute values based on grid
+        curMinValX = int(self.minX + (self.curMinCol * (self.maxX - self.minX) / self.resolution))
+        curMaxValX = int(self.minX + (self.curMaxCol * (self.maxX - self.minX) / self.resolution))
+        curMinValY = int(self.minY + (self.curMinRow * (self.maxY - self.minY) / self.resolution))
+        curMaxValY = int(self.minY + (self.curMaxRow * (self.maxY - self.minY) / self.resolution))
+        syn_pars = self.current_synopsis["param"]
+        print("syn_pars is " + str(syn_pars))
+        basicSynID = syn_pars[4]
+        print("basicSynID is " + basicSynID)
+        #queryParameters = [None] * (len(basicSketchQueryParameters) + 4)
+        queryParameters = [str(curMinValX),
+                           str(curMaxValX),
+                           str(curMinValY), str(curMaxValY), basicSynID] + [None] * len(basicSketchQueryParameters)
         for i, v in enumerate(basicSketchQueryParameters):
-            queryParameters[i] = v
+            print("v is " + v)
+            queryParameters[i + 5] = v
+
+        # queryParameters = [None] * len(basicSketchQueryParameters)
+        # for i, v in enumerate(basicSketchQueryParameters):
+        #     queryParameters[i] = v
 
         rq_data = {
             "key": self.current_synopsis["dataSetkey"],
@@ -124,7 +166,7 @@ class QueryNormal:
         if self.output:
             self.output.destroy()
 
-        self.output = customtkinter.CTkFrame(self.frame, width=500, height=250, fg_color="#000811")
+        self.output = customtkinter.CTkFrame(self.frame, width=400, height=250, fg_color="#000811")
         label_output = customtkinter.CTkLabel(self.output, text="Query Output",
                                               font=customtkinter.CTkFont(size=15, weight="bold"))
         label_output.grid(row=0, column=0, padx=20, pady=(10, 10), sticky="nsew")
@@ -137,14 +179,14 @@ class QueryNormal:
         uid_label.grid(row=1, column=1, padx=20, pady=(10, 10))
         syn_label = customtkinter.CTkLabel(self.output, text="Synopsis Type", font = customtkinter.CTkFont(size=14))
         syn_label.grid(row=1, column=2, padx=20, pady=(10, 10))
-        dataset_label = customtkinter.CTkLabel(self.output, text="Dataset", font = customtkinter.CTkFont(size=14))
-        dataset_label.grid(row=1, column=3, padx=20, pady=(10, 10))
-        stream_label = customtkinter.CTkLabel(self.output, text="Stream ID", font = customtkinter.CTkFont(size=14))
-        stream_label.grid(row=1, column=4, padx=20, pady=(10, 10))
-        noOfP_label = customtkinter.CTkLabel(self.output, text="No of P", font = customtkinter.CTkFont(size=14))
-        noOfP_label.grid(row=1, column=5, padx=20, pady=(10, 10))
+        # dataset_label = customtkinter.CTkLabel(self.output, text="Dataset", font = customtkinter.CTkFont(size=14))
+        # dataset_label.grid(row=1, column=3, padx=20, pady=(10, 10))
+        # stream_label = customtkinter.CTkLabel(self.output, text="Stream ID", font = customtkinter.CTkFont(size=14))
+        # stream_label.grid(row=1, column=3, padx=20, pady=(10, 10))
+        # noOfP_label = customtkinter.CTkLabel(self.output, text="No of P", font = customtkinter.CTkFont(size=14))
+        # noOfP_label.grid(row=1, column=3, padx=20, pady=(10, 10))
         param_label = customtkinter.CTkLabel(self.output, text="Parameters", font = customtkinter.CTkFont(size=14))
-        param_label.grid(row=1, column=6, padx=20, pady=(10, 10))
+        param_label.grid(row=1, column=3, padx=20, pady=(10, 10))
         self.num_queries = 0
 
     def create_existing_synopsis_frame(self):
@@ -152,7 +194,7 @@ class QueryNormal:
                                                font=customtkinter.CTkFont(size=13, weight="bold"))
         label_dataset.grid(row=0, column=1, padx=(20, 0), pady=(50, 0))
         dataset_text = customtkinter.StringVar(value=self.App.selected_dataset.name)
-        self.dataset_entry = customtkinter.CTkEntry(self.frame, placeholder_text="2", textvariable=dataset_text)
+        self.dataset_entry= customtkinter.CTkEntry(self.frame, placeholder_text="2", textvariable=dataset_text)
         self.dataset_entry.grid(row=0, column=2, padx=(0, 20), pady=(50, 0))
 
         self.button_load_synopses = customtkinter.CTkButton(self.frame,
@@ -165,7 +207,7 @@ class QueryNormal:
         if self.scrollable_frame is not None:
             self.scrollable_frame.delete_all_items()
 
-        self.App.read_syns_from_sde(self.dataset_entry.get(), False)
+        self.App.read_syns_from_sde(self.dataset_entry.get(), True)
 
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
                                                            item_list=self.App.existing_synopses.values(),
@@ -182,7 +224,7 @@ class QueryNormal:
                                                             command=self.reload_existing_synopses)
         self.button_load_synopses.grid(row=0, column=0, padx=(20, 0), pady=(50, 0))
 
-        self.App.read_syns_from_sde(self.dataset_entry.get(), spatial=False)
+        self.App.read_syns_from_sde(self.dataset_entry.get(), True)
 
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
                                                            item_list=self.App.existing_synopses.values(),
@@ -200,14 +242,144 @@ class QueryNormal:
         uid.grid(row=self.num_queries + 1, column=1, padx=20, pady=(10, 10))
         syn = customtkinter.CTkLabel(self.output, text=output["synopsisID"], font = customtkinter.CTkFont(size=14))
         syn.grid(row=self.num_queries + 1, column=2, padx=20, pady=(10, 10))
-        dataset = customtkinter.CTkLabel(self.output, text=output["key"], font = customtkinter.CTkFont(size=14))
-        dataset.grid(row=self.num_queries + 1, column=3, padx=20, pady=(10, 10))
-        stream = customtkinter.CTkLabel(self.output, text=output["streamID"], font = customtkinter.CTkFont(size=14))
-        stream.grid(row=self.num_queries + 1, column=4, padx=20, pady=(10, 10))
-        noOfP = customtkinter.CTkLabel(self.output, text=output["noOfP"], font = customtkinter.CTkFont(size=14))
-        noOfP.grid(row=self.num_queries + 1, column=5, padx=20, pady=(10, 10))
+        # dataset = customtkinter.CTkLabel(self.output, text=output["dataSetkey"], font = customtkinter.CTkFont(size=14))
+        # dataset.grid(row=self.num_queries + 1, column=3, padx=20, pady=(10, 10))
+        # stream = customtkinter.CTkLabel(self.output, text=output["streamID"], font = customtkinter.CTkFont(size=14))
+        # stream.grid(row=self.num_queries + 1, column=3, padx=20, pady=(10, 10))
+        # noOfP = customtkinter.CTkLabel(self.output, text=output["noOfP"], font = customtkinter.CTkFont(size=14))
+        # noOfP.grid(row=self.num_queries + 1, column=3, padx=20, pady=(10, 10))
         param = customtkinter.CTkLabel(self.output, text=output["param"], font = customtkinter.CTkFont(size=14))
-        param.grid(row=self.num_queries + 1, column=6, padx=20, pady=(10, 10))
+        param.grid(row=self.num_queries + 1, column=3, padx=20, pady=(10, 10))
+
+    def create_grid(self):
+        # First destroy the existing grid
+        if self.img_window_ctk is not None:
+            self.img_window_ctk.destroy()
+        if self.grid_window_ctk is not None:
+            self.grid_window_ctk.destroy()
+
+        # Check if syn_array has at least 5 elements
+
+        self.curMaxCol = 0  # int(self.minX)
+        self.curMinCol = self.resolution  # int(self.maxX)
+        self.curMaxRow = 0  # int(self.minY)
+        self.curMinRow = self.resolution  # int(self.maxY)
+
+        sizeY = int(self.maxY) - int(self.minY)
+        sizeX = int(self.maxX) - int(self.minX)
+
+        # we always want a 1000x1000 grid
+        self.desiredSize = min(self.App.winfo_screenwidth(), self.App.winfo_screenheight())
+        scaleFactorX = self.desiredSize / sizeX
+        scaleFactorY = self.desiredSize / sizeY
+        self.img_window_ctk = customtkinter.CTkToplevel(self.App)
+        self.img_window = customtkinter.CTkFrame(self.img_window_ctk)
+
+        self.img_window_ctk.geometry("{}x{}".format(self.desiredSize, self.desiredSize))
+
+        # self.img_window_ctk.geometry = self.App.geometry#("{0}x{0}+0+0".format(self.App.winfo_screenwidth(), self.App.winfo_screenheight()))
+        self.img_window_ctk.title("Step 3: Choose parameters")
+
+        self.img_window_ctk.resizable(False, False)
+
+        image_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "test_images")
+        img = Image.open(os.path.join(image_path, "europe_arcgis.png"))
+        img = ImageOps.fit(img, (self.desiredSize, self.desiredSize))
+        img_width, img_height = img.size
+        self.europe_map_image = customtkinter.CTkImage(img, size=(img_width, img_height))
+        label_image = customtkinter.CTkLabel(self.img_window, text="", image=self.europe_map_image)
+        label_image.image = self.europe_map_image
+        label_image.place(relx=0.5, rely=0.5, anchor="center")
+        label_image.pack()
+        self.img_window.pack(fill=tkinter.BOTH, expand=True, padx=0, pady=0)
+
+        self.grid_window_ctk = customtkinter.CTkToplevel(self.App)
+        # self.grid_window_ctk.geometry("{}x{}".format(self.desiredSize, self.desiredSize))
+        self.grid_window_ctk.geometry("{}x{}".format(img_width, img_height))
+
+        # self.grid_window_ctk.geometry = self.App.geometry#("{0}x{0}+0+0".format(self.App.winfo_screenwidth(), self.App.winfo_screenheight()))
+        self.grid_window_ctk.resizable(False, False)
+
+        # grid_window_ctk.pack(fill=tkinter.BOTH, expand=True, padx=10, pady=10)
+        self.grid_window_ctk.title("Step 3: Choose parameters")
+        self.grid_window_ctk.wait_visibility(self.grid_window_ctk)
+        self.grid_window_ctk.wm_attributes("-alpha", 0.4)
+        grid_window = customtkinter.CTkFrame(self.grid_window_ctk)
+
+        self.table = CTkTable(master=grid_window, row=self.resolution,
+                              column=self.resolution, width=self.desiredSize, height=self.desiredSize,
+                              padx=0,
+                              hover_color="#f0f0f0")
+        self.table.grid(row=0, column=0, padx=0, pady=0)
+        self.grid_window_ctk.bind("<Configure>", self.move_me)
+        self.img_window_ctk.attributes("-topmost", True)
+        self.grid_window_ctk.attributes("-topmost", True)
+
+        grid_window.pack(fill=tkinter.BOTH, expand=True, padx=0, pady=0)
+
+    def move_me(self, event):
+        try:
+            if self.img_window_ctk is not None:
+                x = self.grid_window_ctk.winfo_x()
+                y = self.grid_window_ctk.winfo_y()
+                offset = 37
+
+                # Set the position of img_window_ctk
+                self.img_window_ctk.geometry(f"+{x}+{y - offset}")
+                # self.img_window_ctk.geometry(f"{self.desiredSize}x{self.desiredSize}+{x}+{y}")
+
+        except NameError:
+            pass
+
+    def store_cell(self, e):
+        row = e['row']
+        col = e['column']
+        val = e['value']
+        if row < self.curMinRow:
+            self.curMinRow = row
+        if row > self.curMaxRow:
+            self.curMaxRow = row
+        if col < self.curMinCol:
+            self.curMinCol = col
+        if col > self.curMaxCol:
+            self.curMaxCol = col
+        self.selected_cells.append({"row": row, "col": col, "val": val})
+
+    # def get_correct_parameters(self, synParameters, synBasicParameters):
+    #     basic_parameters = synBasicParameters.split(";")
+    #     if self.App.current_dataset is not None:  # use current dataset in frame 1
+    #         minX = str(self.App.current_dataset["minX"])
+    #         maxX = str(self.App.current_dataset["maxX"])
+    #         minY = str(self.App.current_dataset["minY"])
+    #         maxY = str(self.App.current_dataset["maxY"])
+    #         res = synParameters[0]
+    #     else:
+    #         minX = synParameters[0]
+    #         maxX = synParameters[1]
+    #         minY = synParameters[2]
+    #         maxY = synParameters[3]
+    #         res = synParameters[4]
+    #
+    #     new_parameters = [basic_parameters[0], basic_parameters[1], basic_parameters[2], synBasicParameters,
+    #                       str(self.basicSketchMap[self.basic_sketch_name]["synID"]), minX, maxX, minY, maxY, res]
+    #     return new_parameters
+
+    def getSelectedCells(self):
+        # reset old pars
+        self.curMaxCol = 0  # int(self.minX)
+        self.curMinCol = self.resolution  # int(self.maxX)
+        self.curMaxRow = 0  # int(self.minY)
+        self.curMinRow = self.resolution  # int(self.maxY)
+
+        # go over all cells in table and store the selected ones
+        self.selected_cells = []
+        for i in range(self.resolution):
+            for j in range(self.resolution):
+                if isinstance(self.table.frame[i, j], CustomCTkCheckBox):
+                    if self.table.frame[i, j].get() == 1:
+                        print("Cell: ", i, j, " is selected")
+                        self.store_cell({"row": i, "column": j, "value": 1})
+
 
 
 # import json

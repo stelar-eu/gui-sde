@@ -1,5 +1,4 @@
 import json
-
 class Datapoint:
     def __init__(self, key="", stream_id="", values=None):
         if values is None:
@@ -38,12 +37,13 @@ class Datapoint:
     def set_values(self, values):
         self.values = values
 
-    def to_json_string(self):
-        return json.dumps(self.__dict__)
+    def to_dict(self):
+        data = {"dataSetkey": self.dataSetkey, "streamID": self.streamID, "values": self.values}
+        return data
     def to_json(self):
         return json.dumps(self.__dict__)
     def __str__(self):
-        return f"Datapoint{{dataSetkey='{self.dataSetkey}', streamID='{self.streamID}', values='{self.values}'}}"
+        return f"dataSetkey='{self.dataSetkey}', streamID='{self.streamID}', values='{self.values}"
 
 
 # Usage example:

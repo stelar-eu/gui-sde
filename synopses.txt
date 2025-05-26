@@ -1,7 +1,0 @@
-{'key': 'd', 'dataSetkey': 'd', 'requestID': 1, 'synopsisID': '31', 'uid': 642774, 'streamID': 's', 'param': ['d', 's', 'Queryable', '3', '4', '50', '60', '31', '1'], 'noOfP': '2', 'u_name': 'u'}
-{'key': 'd1', 'dataSetkey': 'd1', 'requestID': 1, 'synopsisID': '1', 'uid': 29201130, 'streamID': 's1', 'param': ['d1', 's1', 'Queryable', '0.1', '0.99', '1'], 'noOfP': '16', 'u_name': 'e'}
-{'key': 'd1', 'dataSetkey': 'd1', 'requestID': 1, 'synopsisID': '1', 'uid': 23368609, 'streamID': 's1', 'param': ['d1', 's1', 'Queryable', '0.1', '0.99', '1'], 'noOfP': '2', 'u_name': 'r'}
-{'key': 'd1', 'dataSetkey': 'd1', 'requestID': 1, 'synopsisID': '1', 'uid': 99430360, 'streamID': 's1', 'param': ['d1', 's1', 'Queryable', '0.1', '0.99', '1'], 'noOfP': '2', 'u_name': 't'}
-{'key': 'd1', 'dataSetkey': 'd1', 'requestID': 1, 'synopsisID': '1', 'uid': 1346810, 'streamID': 's1', 'param': ['d1', 's1', 'Queryable', '0.1', '0.99', '1'], 'noOfP': '2', 'u_name': 'y'}
-{'key': 'd1', 'dataSetkey': 'd1', 'requestID': 1, 'synopsisID': '1', 'uid': 1346810, 'streamID': 's1', 'param': ['d1', 's1', 'Queryable', '0.1', '0.99', '1'], 'noOfP': '2', 'u_name': 'y'}
-{'key': 'RR', 'dataSetkey': 'RR', 'requestID': 1, 'synopsisID': '1', 'uid': 38372895, 'streamID': 'S1', 'param': ['SOUID', 'RR', 'Queryable', '0.1', '0.99', '1'], 'noOfP': '2', 'u_name': 'testCM'}

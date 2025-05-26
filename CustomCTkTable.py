@@ -241,10 +241,10 @@ class CTkTable(customtkinter.CTkFrame):
                                                               corner_radius=0,
                                                               **args)
                     self.frame[i, j].wait_visibility(self.frame[i, j])
-                    self.frame[i, j].wm_attributes("-alpha", 0.1)
-                    self.frame[i, j].mainloop()
+                    # self.frame[i, j].wm_attributes("-alpha", 0.1)
+                    # self.frame[i, j].mainloop()
                     if value is None:
-                        value = " "
+                        value = ""
                     self.frame[i, j].insert(0, str(value))
                     self.frame[i, j].bind("<Key>", lambda e, row=i, column=j, data=self.data: self.after(100,
                                                                                                          lambda: self.manipulate_data(
@@ -302,7 +302,7 @@ class CTkTable(customtkinter.CTkFrame):
                     #                                                e, self.frame[i, j])) if self.command else None, **args)
                     self.frame[i, j].grid(column=j, row=i, padx=padx, pady=pady, sticky="nsew")
                     if self.frame[i, j]._text_label is not None:
-                        print("wraplength", self.wraplength)
+                        # print("wraplength", self.wraplength)
                         self.frame[i, j]._text_label.config(wraplength=self.wraplength)
 
                     if hover_modify:
@@ -342,11 +342,11 @@ class CTkTable(customtkinter.CTkFrame):
 
         # frame.configure(background_corner_colors=corners, fg_color=fg)
         frame.bind("<Enter>", lambda e, x=i, y=j, color=hover_corners, fg=hv:
-        # self.frame[x, y].configure(background_corner_colors=color, fg_color=fg))
-        self.frame[x, y].configure(fg_color=fg))
+            #self.frame[x, y].configure(background_corner_colors=color, fg_color=fg))
+            self.frame[x, y].configure(fg_color=fg))
         frame.bind("<Leave>", lambda e, x=i, y=j, color=corners, fg=fg:
-        # self.frame[x, y].configure(background_corner_colors=color, fg_color=fg))
-        self.frame[x, y].configure(fg_color=fg))
+            # self.frame[x, y].configure(background_corner_colors=color, fg_color=fg))
+            self.frame[x, y].configure(fg_color=fg))
 
     def manipulate_data(self, row, column):
         """ entry callback """
@@ -611,6 +611,7 @@ class CTkTable(customtkinter.CTkFrame):
 
     def get(self, row=None, column=None):
         """ get the required cell """
+        print("Get")
         if row is not None and column is not None:
             return self.data[row, column]["value"]
         else:
@@ -638,7 +639,7 @@ class CTkTable(customtkinter.CTkFrame):
 
     def configure(self, **kwargs):
         """ configure table widget attributes"""
-
+        print("configure")
         if "colors" in kwargs:
             self.colors = kwargs.pop("colors")
             self.fg_color = self.colors[0]

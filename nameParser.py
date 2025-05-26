@@ -1,7 +1,0 @@
-
-
-class nameParser:
-
-    synIDToName = {}
-    synNameToID = {}
-

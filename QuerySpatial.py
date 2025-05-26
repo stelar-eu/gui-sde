@@ -9,12 +9,9 @@ from CustomCTkTable import *
 import threading
 from tkinter import messagebox, ttk
 
-from confluent_kafka import *
+# from confluent_kafka import *
 from ScrollableRadioButtonFrame import ScrollableRadiobuttonFrame
 from datasetMap import DatasetMap
-from messages.sendRequest import SendRequest
-
-from messages.sendRequest import SendRequest
 
 
 class QuerySpatial:
@@ -201,8 +198,8 @@ class QuerySpatial:
 
     def set_frame4(self):
         self.frame = self.App.frames["frame4"]
-        if (self.App.current_dataset != None):
-            self.dsMap = DatasetMap.getDataset(DatasetMap(), self.App.current_dataset["DatasetName"])
+        # if (self.App.current_dataset != None):
+        #     self.dsMap = DatasetMap.getDataset(DatasetMap(), self.App.current_dataset["DatasetName"])
 
         # set title
         title = customtkinter.CTkLabel(self.frame, text="Query Synopsis",
@@ -230,7 +227,6 @@ class QuerySpatial:
                         self.store_cell({"row": i, "column": j, "value": 1})
 
     def send_request(self):
-
         self.getSelectedCells()
         basicSketchQueryParameters = self.dataEntry.get().replace(" ", "").split(",") + "1".split(",")
         if len(basicSketchQueryParameters) != 2:
@@ -256,9 +252,14 @@ class QuerySpatial:
                            str(curMaxValX),
                            str(curMinValY), str(curMaxValY)]
 
-        rq = SendRequest(3, self.curDatasetKey, self.curStreamID, self.curU_name, self.curUID, self.curSynopsisID,
-                         self.curNoOfP, queryParameters, self.App)
-        rq.send_request_to_kafka_topic()
+        # rq = SendRequest(3, self.curDatasetKey, self.curStreamID, self.curU_name, self.curUID, self.curSynopsisID,
+        #                  self.curNoOfP, queryParameters, self.App)
+        # rq.send_request_to_kafka_topic()
+
+        rq = {"key":self.curDatasetKey, "streamID":self.curStreamID, "synopsisID":self.curSynopsisID, "requestID":3,
+              "dataSetkey": self.curDatasetKey, "param": queryParameters,"noOfP":self.curNoOfP, "uid":self.curUID,
+              "externalUID":"Estimate:"+str(self.curUID)}
+        self.App.sde.send_request(rq, "Estimate:"+str(self.curUID))
 
         # small timeout
         messagebox.showinfo("Query Successful", "Query successfully submitted.", parent=self.frame)
@@ -357,11 +358,10 @@ class QuerySpatial:
                                                             text="Reload Synopses",
                                                             command=self.reload_existing_synopses)
         self.button_load_synopses.grid(row=0, column=0, padx=(20, 0), pady=(50, 0))
-        self.scrollable_frame_synopses = []
-        self.App.read_syns_from_file()
+
 
         self.scrollable_frame = ScrollableRadiobuttonFrame(master=self.frame,
-                                                           item_list=self.scrollable_frame_synopses,
+                                                           item_list=self.App.existing_synopses,
                                                            command=self.set_query_parameters,
                                                            label_text="Step 1: Load Existing Synopses", width=650,
                                                            height=400, fg_color="#000811")
