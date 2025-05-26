@@ -9,6 +9,7 @@ class MinIOClient:
             credentials["minio"]["endpoint"],
             access_key=credentials["minio"]["access_key"],
             secret_key=credentials["minio"]["secret_key"],
+            session_token=credentials["minio"]["session_token"],
             secure=True
         )
         self.bucket_name = bucket_name

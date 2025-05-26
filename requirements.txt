@@ -1,8 +1,10 @@
-customtkinter~=5.2.2
-pillow~=10.3.0
+streamlit-folium
+streamlit
+plotly
 numpy
 pandas
 folium
 minio
 sde_py_lib
 kafka-python
+stelar-client

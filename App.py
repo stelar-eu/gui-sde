@@ -11,11 +11,7 @@ import json
 class App:
     def __init__(self):
         if "credentials" not in st.session_state:
-            st.text_input("Enter your credentials file path:",
-                          key="credentials_path", value="./credentials_local.json")
-            # st.session_state.credentials = self.load_credentials('./streamlitApp/credentials.json')
-
-            st.session_state.credentials = self.load_credentials(st.session_state.credentials_path)
+            st.session_state.credentials = self.load_credentials_from_uri()
 
         if "sde_parameters" not in st.session_state:
             st.session_state.sde_parameters = {
@@ -23,24 +19,29 @@ class App:
                 "request_topic": "request",
                 "output_topic": "estimation",
                 "logging_topic": "logging",
-                "bootstrap_servers": st.session_state.credentials["kafka"]["bootstrap_servers"],
+                "bootstrap_servers": st.session_state.credentials["kafka"][
+                    "bootstrap_servers"
+                ],
                 "parallelization": "2",
                 "syn_filename": "synopses.txt",
-                "dataset_filename": "datasets.txt"
+                "dataset_filename": "datasets.txt",
             }
         if "sde" not in st.session_state:
-            st.session_state.sde = Client(st.session_state.sde_parameters["bootstrap_servers"],
-                                      message_queue_size=20, response_timeout=20)
+            st.session_state.sde = Client(
+                st.session_state.sde_parameters["bootstrap_servers"],
+                message_queue_size=20,
+                response_timeout=20,
+            )
         if "stelar_client" not in st.session_state:
             st.session_state.stelar_client = stelarClient(
-                base_url=st.session_state.credentials['stelar_client']['url'],
-                username=st.session_state.credentials['stelar_client']['username'],
-                password=st.session_state.credentials['stelar_client']['password']
+                base_url=st.session_state.credentials["stelar_client"]["url"],
+                token_json=st.session_state.credentials["token_json"],
+                username=st.session_state.credentials["stelar_client"]["username"],
             )
         if "minio_client" not in st.session_state:
             st.session_state.minio_client = MinIOClient(
-                bucket_name="klms-bucket",
-                credentials=st.session_state.credentials
+                bucket_name=st.session_state.credentials["minio"]["bucket"],
+                credentials=st.session_state.credentials,
             )
 
         if "existing_datasets" not in st.session_state:
@@ -54,8 +55,46 @@ class App:
     @staticmethod
     @st.cache_data
     def load_credentials(file_path):
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             return json.load(file)
+
+    @staticmethod
+    @st.cache_data
+    def load_credentials_from_uri():
+        """
+        Load credentials from a URI.
+        The URI should contain query parameters for the credentials.
+        """
+        qparams = st.query_params
+        creds = {
+            "stelar_client": {
+                "url": qparams.get("api", "https://klms.stelar.gr/stelar"),
+                "access_token": qparams.get("access_token", ""),
+                "refresh_token": qparams.get("refresh_token", ""),
+                "expires_in": int(qparams.get("expires_in", "0")),
+                "refresh_expires_in": int(qparams.get("refresh_expires_in", "0")),
+                "username": qparams.get("username", ""),
+            },
+            "token_json": {
+                "access_token": qparams.get("access_token", ""),
+                "refresh_token": qparams.get("refresh_token", ""),
+                "expires_in": int(qparams.get("expires_in", "0")),
+                "refresh_expires_in": int(qparams.get("refresh_expires_in", "0")),
+            },
+            "minio": {
+                "endpoint": qparams.get("s3_endpoint", ""),
+                "access_key": qparams.get("access_key", ""),
+                "secret_key": qparams.get("secret_key", ""),
+                "session_token": qparams.get("session_token", ""),
+                "bucket": qparams.get("bucket", "klms-bucket"),
+            },
+            "kafka": {
+                "bootstrap_servers": qparams.get(
+                    "kafka_bootstrap_servers", "sde.petrounetwork.gr:19092"
+                ),
+            },
+        }
+        return creds
 
     @staticmethod
     @st.cache_data
