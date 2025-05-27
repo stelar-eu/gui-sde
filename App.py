@@ -10,8 +10,9 @@ import json
 
 class App:
     def __init__(self):
-        if "credentials" not in st.session_state:
-            st.session_state.credentials = self.load_credentials_from_uri()
+        # Credentials are always loaded from the URI since the Tokens required 
+        # for the STELAR client are passed as query parameters and are prone to expire.
+        st.session_state.credentials = self.load_credentials_from_uri()
 
         if "sde_parameters" not in st.session_state:
             st.session_state.sde_parameters = {
@@ -36,7 +37,7 @@ class App:
             st.session_state.stelar_client = stelarClient(
                 base_url=st.session_state.credentials["stelar_client"]["url"],
                 token_json=st.session_state.credentials["token_json"],
-                username=st.session_state.credentials["stelar_client"]["username"],
+                #username=st.session_state.credentials["stelar_client"]["username"],
             )
         if "minio_client" not in st.session_state:
             st.session_state.minio_client = MinIOClient(
