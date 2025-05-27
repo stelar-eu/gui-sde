@@ -11,6 +11,7 @@ def dataset_management():
 def load_datasets():
     datasets = st.session_state.stelar_client.datasets[:]
     shown_datasets = []
+    st.write("DEBUG: Available Datasets:", [name for name in st.session_state.existing_datasets])
     for dataset in datasets:
         if dataset.name in st.session_state.existing_datasets:
             shown_datasets.append(dataset)

@@ -113,6 +113,7 @@ class App:
             st.session_state.existing_datasets = {}
             for d in datasets:
                 dataset = ast.literal_eval(d)
+                st.write("DEBUG: Loading dataset:", dataset["dataSetkey"])
 
                 st.session_state.existing_datasets[dataset["dataSetkey"]] = dataset
         return
