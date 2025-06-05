@@ -26,8 +26,10 @@ def parse_s3_url(s3_url):
 if "parse_s3_url" not in st.session_state:
     st.session_state.parse_s3_url = parse_s3_url
 
+
+local =False
 # Create App instance
-App()
+App(local)
 
 # Sidebar for SDE Parameters
 get_sidebar()

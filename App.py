@@ -9,10 +9,13 @@ import json
 
 
 class App:
-    def __init__(self):
+    def __init__(self, local):
         # Credentials are always loaded from the URI since the Tokens required 
         # for the STELAR client are passed as query parameters and are prone to expire.
-        st.session_state.credentials = self.load_credentials_from_uri()
+        if local:
+            st.session_state.credentials = self.load_credentials("./credentials_local.json")
+        else:
+            st.session_state.credentials = self.load_credentials_from_uri()
 
         bootstrap_servers = st.session_state.credentials["kafka"]["bootstrap_servers"]
         if bootstrap_servers:
