@@ -4,6 +4,10 @@ from minio.error import S3Error
 
 
 class MinIOClient:
+    secret_key = None
+    session_token = None
+    credentials = None
+
     def __init__(self, bucket_name, credentials):
         self.client = Minio(
             credentials["minio"]["endpoint"],
@@ -13,6 +17,7 @@ class MinIOClient:
             secure=True
         )
         self.bucket_name = bucket_name
+        self.credentials = credentials
 
     def list_files(self):
         try:
@@ -49,3 +54,9 @@ class MinIOClient:
         except S3Error as err:
             print(f"Error occurred: {err}")
             return []
+
+    def get_secret_key(self):
+        return self.secret_key
+
+    def get_session_token(self):
+        return self.session_token
