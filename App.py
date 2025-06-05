@@ -121,8 +121,9 @@ class App:
         # - DatasetName
         # - StreamID
         # - Attribute list
+        st.write("Try to load datasets from txt_files/datasets.txt")
 
-        with open("txt_files/datasets.txt", "r") as file:
+        with open("./txt_files/datasets.txt", "r") as file:
             datasets = file.readlines()
             st.session_state.existing_datasets = {}
             for d in datasets:
