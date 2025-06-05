@@ -36,12 +36,13 @@ class App:
         new_token_json = st.session_state.credentials["token_json"]
 
         # Check if the client exists and the token has changed or expired
-        if "stelar_client" in st.session_state:
-            if st.session_state.stelar_client.token_json != new_token_json:  # Assuming the client has a `token_json` attribute
+        if "stelar_client" in st.session_state and "token" in st.session_state:
+            if st.session_state.token != new_token_json:  # Assuming the client has a `token_json` attribute
                 st.session_state.stelar_client = None  # Clear the old client
 
         # Initialize the client with the new token_json
         if "stelar_client" not in st.session_state or st.session_state.stelar_client is None:
+            st.session_state.token = new_token_json
             st.session_state.stelar_client = stelarClient(
                 base_url=st.session_state.credentials["stelar_client"]["url"],
                 token_json=new_token_json,
