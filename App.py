@@ -17,6 +17,7 @@ class App:
         else:
             st.session_state.credentials = self.load_credentials_from_uri()
 
+        st.write("DEBUG: Loaded credentials:", st.session_state.credentials)
         bootstrap_servers = st.session_state.credentials["kafka"]["bootstrap_servers"]
         if bootstrap_servers:
             st.session_state.sde_parameters = {
