@@ -9,6 +9,11 @@ def dataset_management():
 
 
 def load_datasets():
+    st.write("Loading datasets with credentials:")
+    st.write(st.session_state.credentials)
+    st.write(st.session_state.stelar_client.token)
+    st.write("Existing Datasets:", st.session_state.existing_datasets)
+    st.write(st.session_state.stelar_client)
     datasets = st.session_state.stelar_client.datasets[:]
     shown_datasets = []
     st.write("DEBUG: Available Datasets:", [name for name in st.session_state.existing_datasets])
