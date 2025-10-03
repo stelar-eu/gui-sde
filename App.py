@@ -109,7 +109,7 @@ class App:
             },
             "kafka": {
                 "bootstrap_servers": qparams.get(
-                    "kafka_bootstrap_servers", "sde.petrounetwork.gr:19092"
+                    "kafka_bootstrap_servers", "sde.stelar.gr:19092"
                 ),
             },
         }
