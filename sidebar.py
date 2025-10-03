@@ -25,10 +25,10 @@ def get_sidebar():
 
     if st.sidebar.button("Connect to SDE"):
         response = st.session_state.sde.send_storage_auth_request(
-            st.session_state.credentials["klms"]["access_key"],
-            st.session_state.credentials["klms"]["secret_key"],
-            st.session_state.credentials["klms"]["session_token"],
-            st.session_state.credentials["klms"]["endpoint"]
+            st.session_state.credentials["minio"]["access_key"],
+            st.session_state.credentials["minio"]["secret_key"],
+            st.session_state.credentials["minio"]["session_token"],
+            st.session_state.credentials["minio"]["endpoint"]
         )
         if response:
             st.sidebar.success("Connected to running SDE")
