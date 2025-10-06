@@ -30,8 +30,8 @@ class App:
                 "syn_filename": "synopses.txt",
                 "dataset_filename": "datasets.txt",
             }
+        st.write('bootstrap_servers', st.session_state.sde_parameters['bootstrap_servers'])
         if "sde" not in st.session_state:
-            st.write('bootstrap_servers', st.session_state.sde_parameters['bootstrap_servers'])
             st.session_state.sde = Client(
                 str(st.session_state.sde_parameters["bootstrap_servers"]),
                 st.session_state.sde_parameters['request_topic'],
