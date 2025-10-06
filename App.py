@@ -31,10 +31,16 @@ class App:
                 "dataset_filename": "datasets.txt",
             }
         if "sde" not in st.session_state:
+            st.write('bootstrap_servers', st.session_state.sde_parameters['bootstrap_servers'])
             st.session_state.sde = Client(
-                st.session_state.sde_parameters["bootstrap_servers"],
+                str(st.session_state.sde_parameters["bootstrap_servers"]),
+                st.session_state.sde_parameters['request_topic'],
+                st.session_state.sde_parameters['data_topic'],
+                st.session_state.sde_parameters['output_topic'],
+                st.session_state.sde_parameters['logging_topic'],
                 message_queue_size=20,
                 response_timeout=20,
+                parallelism=int(st.session_state.sde_parameters['parallelization'])
             )
 
         new_token_json = st.session_state.credentials["token_json"]
