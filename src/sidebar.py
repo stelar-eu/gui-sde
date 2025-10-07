@@ -1,7 +1,6 @@
-import os
 from datetime import datetime
 import streamlit as st
-from DataClientStreamLit import DataClientStreamLit
+from src.DataClientStreamLit import DataClientStreamLit
 
 
 def get_sidebar():

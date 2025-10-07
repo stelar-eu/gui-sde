@@ -6,6 +6,37 @@ from MinIOClient import MinIOClient
 
 import streamlit as st
 import json
+from urllib.parse import urlparse, parse_qs
+
+
+def get_creds(qparams):
+    creds = {
+        "stelar_client": {
+            "url": qparams.get("api", "https://klms.stelar.gr/stelar"),
+            "access_token": qparams.get("access_token", ""),
+            "refresh_token": qparams.get("refresh_token", ""),
+            "expires_in": int(qparams.get("expires_in", "0")),
+            "refresh_expires_in": int(qparams.get("refresh_expires_in", "0")),
+            "username": qparams.get("username", ""),
+        },
+        "token_json": {
+            "access_token": qparams.get("access_token", ""),
+            "refresh_token": qparams.get("refresh_token", ""),
+            "expires_in": int(qparams.get("expires_in", "0")),
+            "refresh_expires_in": int(qparams.get("refresh_expires_in", "0")),
+        },
+        "minio": {
+            "endpoint": qparams.get("s3_endpoint", ""),
+            "access_key": qparams.get("access_key", ""),
+            "secret_key": qparams.get("secret_key", ""),
+            "session_token": qparams.get("session_token", ""),
+            "bucket": qparams.get("bucket", "klms-bucket"),
+        },
+        "kafka": {
+            "bootstrap_servers": qparams.get("kafka_bootstrap_servers", "sde.stelar.gr:19092"),
+        },
+    }
+    return creds
 
 
 class App:
@@ -13,7 +44,9 @@ class App:
         # Credentials are always loaded from the URI since the Tokens required 
         # for the STELAR client are passed as query parameters and are prone to expire.
         if local:
-            st.session_state.credentials = self.load_credentials("./credentials_local.json")
+            url = open("./txt_files/local_url.txt", "r").read()
+            creds = self.load_credentials_from_url_local(url)
+            st.session_state.credentials = creds
         else:
             st.session_state.credentials = self.load_credentials_from_uri()
         bootstrap_servers = st.session_state.credentials["kafka"]["bootstrap_servers"]
@@ -77,9 +110,14 @@ class App:
 
     @staticmethod
     @st.cache_data
-    def load_credentials(file_path):
-        with open(file_path, "r") as file:
-            return json.load(file)
+    def load_credentials_from_url_local(url: str):
+        """
+        Parse a full URL and return credentials in the same structure as load_credentials_from_uri().
+        """
+        parsed_url = urlparse(url)
+        qparams = {k: v[0] for k, v in parse_qs(parsed_url.query).items()}  # flatten single values
+
+        return get_creds(qparams)
 
     @staticmethod
     @st.cache_data
@@ -89,35 +127,7 @@ class App:
         The URI should contain query parameters for the credentials.
         """
         qparams = st.query_params
-        creds = {
-            "stelar_client": {
-                "url": qparams.get("api", "https://klms.stelar.gr/stelar"),
-                "access_token": qparams.get("access_token", ""),
-                "refresh_token": qparams.get("refresh_token", ""),
-                "expires_in": int(qparams.get("expires_in", "0")),
-                "refresh_expires_in": int(qparams.get("refresh_expires_in", "0")),
-                "username": qparams.get("username", ""),
-            },
-            "token_json": {
-                "access_token": qparams.get("access_token", ""),
-                "refresh_token": qparams.get("refresh_token", ""),
-                "expires_in": int(qparams.get("expires_in", "0")),
-                "refresh_expires_in": int(qparams.get("refresh_expires_in", "0")),
-            },
-            "minio": {
-                "endpoint": qparams.get("s3_endpoint", ""),
-                "access_key": qparams.get("access_key", ""),
-                "secret_key": qparams.get("secret_key", ""),
-                "session_token": qparams.get("session_token", ""),
-                "bucket": qparams.get("bucket", "klms-bucket"),
-            },
-            "kafka": {
-                "bootstrap_servers": qparams.get(
-                    "kafka_bootstrap_servers", "sde.stelar.gr:19092"
-                ),
-            },
-        }
-        return creds
+        return get_creds(qparams)
 
     @staticmethod
     @st.cache_data
@@ -129,14 +139,11 @@ class App:
         # - DatasetName
         # - StreamID
         # - Attribute list
-        # st.write("Try to load datasets from txt_files/datasets.txt")
 
         with open("./txt_files/datasets.txt", "r") as file:
             datasets = file.readlines()
             st.session_state.existing_datasets = {}
             for d in datasets:
                 dataset = ast.literal_eval(d)
-                # st.write("DEBUG: Loading dataset:", dataset["dataSetkey"])
                 st.session_state.existing_datasets[dataset["dataSetkey"]] = dataset
-        st.write("Existing datasets is now: ", st.session_state.existing_datasets)
         return

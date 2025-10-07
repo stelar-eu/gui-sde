@@ -27,8 +27,16 @@ def create_synopsis():
         stream_id = st.session_state.current_dataset["StreamID"]
 
     # Unique Name
-    st.session_state.u_name = st.text_input("Unique Name", key="unique_name")
+    u_name_input = st.text_input("Unique Name", key="unique_name")
 
+    if u_name_input:
+        try:
+            st.session_state.u_name = int(u_name_input)
+            # st.success(f"Valid integer: {st.session_state.u_name}")
+        except ValueError:
+            st.error("Please enter a valid integer.")
+    else:
+        st.session_state.u_name = None
     # Synopsis Type Dropdown
     synopsis_type = st.selectbox(
         "Query Type - Synopsis Name",

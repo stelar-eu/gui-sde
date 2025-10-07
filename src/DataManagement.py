@@ -10,17 +10,10 @@ def dataset_management():
 
 
 def load_datasets():
-    # st.write("Loading datasets with credentials:")
-    # st.write(st.session_state.credentials)
-    st.write("Token: ", st.session_state.stelar_client.token)
-    # st.write("Existing Datasets:", st.session_state.existing_datasets)
-    st.write(f"We have {len(st.session_state.stelar_client.datasets)} datasets")
-    datasets = st.session_state.stelar_client.datasets[:]
     shown_datasets = []
-    st.write("DEBUG: Available Datasets:", [name for name in st.session_state.existing_datasets])
-    for dataset in datasets:
-        if dataset.name in st.session_state.existing_datasets:
-            shown_datasets.append(dataset)
+    for txt_name in st.session_state.existing_datasets:
+        ds = st.session_state.stelar_client.datasets[txt_name]
+        shown_datasets.append(ds)
 
     if shown_datasets:
         # Display datasets in a radio button list

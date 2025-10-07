@@ -2,11 +2,11 @@
 
 import streamlit as st
 
-from DataManagement import dataset_management
-from App import App
-from create_synopsis import create_synopsis
-from query_synopses import query_synopses
-from sidebar import get_sidebar
+from src.DataManagement import dataset_management
+from src.App import App
+from src.create_synopsis import create_synopsis
+from src.query_synopses import query_synopses
+from src.sidebar import get_sidebar
 
 from urllib.parse import urlparse
 
@@ -27,7 +27,7 @@ if "parse_s3_url" not in st.session_state:
     st.session_state.parse_s3_url = parse_s3_url
 
 
-local =False
+local =True
 # Create App instance
 App(local)
 

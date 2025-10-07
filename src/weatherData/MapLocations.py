@@ -1,4 +1,4 @@
-from weatherData.StationRecord import StationRecord
+from src.weatherData.StationRecord import StationRecord
 
 
 class MapLocations:
