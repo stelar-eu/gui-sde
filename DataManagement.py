@@ -1,5 +1,6 @@
 import streamlit as st
 
+
 def dataset_management():
     st.header("Dataset Management")
 
@@ -9,11 +10,11 @@ def dataset_management():
 
 
 def load_datasets():
-    st.write("Loading datasets with credentials:")
-    st.write(st.session_state.credentials)
-    st.write(st.session_state.stelar_client.token)
-    st.write("Existing Datasets:", st.session_state.existing_datasets)
-    st.write(st.session_state.stelar_client)
+    # st.write("Loading datasets with credentials:")
+    # st.write(st.session_state.credentials)
+    st.write("Token: ", st.session_state.stelar_client.token)
+    # st.write("Existing Datasets:", st.session_state.existing_datasets)
+    st.write(f"We have {len(st.session_state.stelar_client.datasets)} datasets")
     datasets = st.session_state.stelar_client.datasets[:]
     shown_datasets = []
     st.write("DEBUG: Available Datasets:", [name for name in st.session_state.existing_datasets])
@@ -39,4 +40,3 @@ def load_datasets():
                 st.error(f"Dataset {selected_dataset_name} not found in existing datasets")
     else:
         st.warning("No datasets available to display.")
-

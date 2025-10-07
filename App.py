@@ -16,8 +16,6 @@ class App:
             st.session_state.credentials = self.load_credentials("./credentials_local.json")
         else:
             st.session_state.credentials = self.load_credentials_from_uri()
-
-        st.write("DEBUG: Loaded credentials:", st.session_state.credentials)
         bootstrap_servers = st.session_state.credentials["kafka"]["bootstrap_servers"]
         if bootstrap_servers:
             st.session_state.sde_parameters = {
@@ -30,7 +28,6 @@ class App:
                 "syn_filename": "synopses.txt",
                 "dataset_filename": "datasets.txt",
             }
-        st.write('bootstrap_servers', st.session_state.sde_parameters['bootstrap_servers'])
         if "sde" not in st.session_state:
             st.session_state.sde = Client(
                 str(st.session_state.sde_parameters["bootstrap_servers"]),
@@ -55,6 +52,7 @@ class App:
             st.session_state.token = new_token_json
             st.session_state.stelar_client = stelarClient(
                 base_url=st.session_state.credentials["stelar_client"]["url"],
+                username=st.session_state.credentials["stelar_client"]["username"],
                 token_json=new_token_json,
             )
 
@@ -71,7 +69,7 @@ class App:
 
         if "existing_datasets" not in st.session_state:
             st.session_state.existing_datasets = {}
-        self.read_metainfo_existing_datasets()
+            self.read_metainfo_existing_datasets()
         if "existing_synopses" not in st.session_state:
             st.session_state.existing_synopses = {}
         if "current_dataset" not in st.session_state:
@@ -131,13 +129,14 @@ class App:
         # - DatasetName
         # - StreamID
         # - Attribute list
-        st.write("Try to load datasets from txt_files/datasets.txt")
+        # st.write("Try to load datasets from txt_files/datasets.txt")
 
         with open("./txt_files/datasets.txt", "r") as file:
             datasets = file.readlines()
             st.session_state.existing_datasets = {}
             for d in datasets:
                 dataset = ast.literal_eval(d)
-                st.write("DEBUG: Loading dataset:", dataset["dataSetkey"])
+                # st.write("DEBUG: Loading dataset:", dataset["dataSetkey"])
                 st.session_state.existing_datasets[dataset["dataSetkey"]] = dataset
+        st.write("Existing datasets is now: ", st.session_state.existing_datasets)
         return
