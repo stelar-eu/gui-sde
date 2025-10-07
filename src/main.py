@@ -27,7 +27,7 @@ if "parse_s3_url" not in st.session_state:
     st.session_state.parse_s3_url = parse_s3_url
 
 
-local =True
+local =False # Manual mode for testing locally. If False, it will load credentials from the URI query parameters.
 # Create App instance
 App(local)
 
