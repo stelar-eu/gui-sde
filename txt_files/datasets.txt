@@ -1,1 +1,1 @@
-{'dataSetkey': 'synopses_experiment', 'name': 'synopses_experiment', 'StreamID':'S1', 'keyField':'DATE', 'valueField': 'RR', 'minX': 22, 'maxX': 242, 'minY': -235, 'maxY': 345, 'maxResolution': 1, 'parameters': ["DATE", "RR"]}
+{'dataSetkey': 'synopses_experiment', 'name': 'synopses_experiment', 'StreamID':'S1', 'keyField':'DATE', 'valueField': 'RR', 'minX':19, 'maxX':29, 'minY':35 , 'maxY': 41, 'maxResolution': 1, 'parameters': ["DATE", "RR"]}

@@ -58,7 +58,7 @@ class DataClientStreamLit:
         if self.producer is None:
             self.producer = KafkaProducer(**self.conf)
 
-        for record in self.data[19:50]:
+        for record in self.data[19:]:
             values = record.split(",")
             if len(values) < 5:
                 continue

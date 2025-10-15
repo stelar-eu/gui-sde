@@ -149,11 +149,12 @@ def show_spatial_query_form():
     uid = st.session_state.selected_synopsis_uid
     syn = st.session_state.existing_synopses[uid]
     dataset = st.session_state.current_dataset
+    st.write(dataset["minY"], dataset["minX"], dataset["maxY"], dataset["maxX"])
 
     center_lat = (dataset["minY"] + dataset["maxY"]) / 2
     center_lon = (dataset["minX"] + dataset["maxX"]) / 2
 
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=8)
+    m = folium.Map(location=[center_lat, center_lon], zoom_start=2)
     folium.Rectangle(
         bounds=[[dataset["minY"], dataset["minX"]], [dataset["maxY"], dataset["maxX"]]],
         color="blue", fill=True, fill_opacity=0.1, tooltip="Dataset Bounds"
@@ -166,17 +167,6 @@ def show_spatial_query_form():
             bounds=[[b["minY"], b["minX"]], [b["maxY"], b["maxX"]]],
             color="red", fill=True, fill_opacity=0.1, tooltip="Selected Region"
         ).add_to(m)
-    # if "query_result" in st.session_state:
-    #     geojson = st.session_state.query_result.get("geojson")
-    #     if geojson:
-    #         folium.GeoJson(
-    #             geojson,
-    #             data=st.session_state.query_result.get("estimate", {}),
-    #             name="Query Result",
-    #             style_function=lambda x: {
-    #                 'fillColor': 'green', 'color': 'green', 'weight': 2, 'fillOpacity': 0.5
-    #             }
-    #         ).add_to(m)
 
     map_data = st_folium(m, height=500, width=700)
 

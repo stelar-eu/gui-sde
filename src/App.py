@@ -30,7 +30,7 @@ def get_creds(qparams):
             "access_key": qparams.get("access_key", ""),
             "secret_key": qparams.get("secret_key", ""),
             "session_token": qparams.get("session_token", ""),
-            "bucket": qparams.get("bucket", "klms-bucket"),
+            "bucket": qparams.get("bucket", "sde-bucket"),
         },
         "kafka": {
             "bootstrap_servers": qparams.get("kafka_bootstrap_servers", "sde.stelar.gr:19092"),
@@ -95,6 +95,8 @@ class App:
                 st.session_state.minio_client = None
 
         if "minio_client" not in st.session_state or st.session_state.minio_client is None:
+            st.write("Minio creds: ", new_minio_credentials)
+            st.write("Stelar creds", st.session_state.credentials["stelar_client"])
             st.session_state.minio_client = MinIOClient(
                 bucket_name=st.session_state.credentials["minio"]["bucket"],
                 credentials=st.session_state.credentials,
