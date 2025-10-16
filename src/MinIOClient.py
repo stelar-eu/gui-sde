@@ -1,5 +1,5 @@
 import minio
-import streamlit
+import streamlit as st
 from minio import Minio
 from minio.error import S3Error
 
@@ -11,7 +11,7 @@ class MinIOClient:
 
     def __init__(self, bucket_name, credentials):
         self.client = Minio(
-            credentials["minio"]["endpoint"],
+            endpoint=credentials["minio"]["endpoint"],
             access_key=credentials["minio"]["access_key"],
             secret_key=credentials["minio"]["secret_key"],
             session_token=credentials["minio"]["session_token"],
@@ -41,14 +41,13 @@ class MinIOClient:
 
     def get_object(self, bucket_name, object_name):
         try:
-            print(f"Fetching object: {object_name} from bucket: {bucket_name}")
             response = self.client.get_object(bucket_name, object_name)
             data = response.read().decode("utf-8").split("\n")
             response.close()
             response.release_conn()
             return data
         except S3Error as err:
-            print(f"Error occurred: {err}")
+            st.write(f"Error occurred: {err}")
             return None
 
     def object_exists(self, bucket_name, object_name):

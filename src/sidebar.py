@@ -50,21 +50,6 @@ def get_data_from_url(res, dataSetkey, StreamID):
     bucket_name, object_path = st.session_state.parse_s3_url(res.url)
 
     data = st.session_state.minio_client.get_object(bucket_name, object_path)
-    # st.write(f"bucket_name: {bucket_name}, object_path: {object_path}")
-    #
-    # try:
-    #     data = None
-    #     if st.session_state.minio_client.object_exists(bucket_name, object_path):
-    #         data = st.session_state.minio_client.get_object(bucket_name, object_path)
-    #     if data is None:
-    #         st.error("Object not found or retrieval failed.")
-    #     else:
-    #         st.write(f"data length: {len(data)} lines")
-    # except Exception as e:
-    #     st.error(f"An error occurred: {e}")
-    st.write(f"Sending data from resource: {res.name}")
-    st.write(f"Data URL: {res.url}")
-
     start_time = datetime.now()
     rr = DataClientStreamLit(data, dataSetkey, res)
     rr.send(dataSetkey, StreamID)

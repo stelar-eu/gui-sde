@@ -95,8 +95,6 @@ class App:
                 st.session_state.minio_client = None
 
         if "minio_client" not in st.session_state or st.session_state.minio_client is None:
-            st.write("Minio creds: ", new_minio_credentials)
-            st.write("Stelar creds", st.session_state.credentials["stelar_client"])
             st.session_state.minio_client = MinIOClient(
                 bucket_name=st.session_state.credentials["minio"]["bucket"],
                 credentials=st.session_state.credentials,
