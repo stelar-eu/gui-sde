@@ -6,6 +6,7 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY . .
+ENV PYTHONPATH="${PYTHONPATH}:/app"
 RUN chmod +x entrypoint.sh
 
 # Install NGINX and gettext (for envsubst)
