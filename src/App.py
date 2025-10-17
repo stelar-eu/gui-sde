@@ -38,6 +38,24 @@ def get_creds(qparams):
     }
     return creds
 
+def read_metainfo_existing_datasets():
+    # Here, we read the datasets.txt file.
+    # The file should contain a list of dictionaries, each representing a dataset.
+    # Each dictionary should contain the following keys:
+    # - dataSetkey
+    # - DatasetName
+    # - StreamID
+    # - Attribute list
+    # Get absolute path to txt_files from project root
+    file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "txt_files", "datasets.txt")
+
+    with open(file_path, "r") as file:
+        datasets = file.readlines()
+        st.session_state.existing_datasets = {}
+        for d in datasets:
+            dataset = ast.literal_eval(d)
+            st.session_state.existing_datasets[dataset["dataSetkey"]] = dataset
+    return
 
 
 class App:
@@ -103,7 +121,7 @@ class App:
 
         if "existing_datasets" not in st.session_state:
             st.session_state.existing_datasets = {}
-            self.read_metainfo_existing_datasets()
+            read_metainfo_existing_datasets()
         if "existing_synopses" not in st.session_state:
             st.session_state.existing_synopses = {}
         if "current_dataset" not in st.session_state:
@@ -132,23 +150,3 @@ class App:
         qparams = st.query_params
         return get_creds(qparams)
 
-    @staticmethod
-    @st.cache_data
-    def read_metainfo_existing_datasets():
-        # Here, we read the datasets.txt file.
-        # The file should contain a list of dictionaries, each representing a dataset.
-        # Each dictionary should contain the following keys:
-        # - dataSetkey
-        # - DatasetName
-        # - StreamID
-        # - Attribute list
-        # Get absolute path to txt_files from project root
-        file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "txt_files", "datasets.txt")
-
-        with open(file_path, "r") as file:
-            datasets = file.readlines()
-            st.session_state.existing_datasets = {}
-            for d in datasets:
-                dataset = ast.literal_eval(d)
-                st.session_state.existing_datasets[dataset["dataSetkey"]] = dataset
-        return

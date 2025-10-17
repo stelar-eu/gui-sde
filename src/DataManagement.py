@@ -1,5 +1,7 @@
 import streamlit as st
 
+from src.App import read_metainfo_existing_datasets
+
 
 def dataset_management():
     st.header("Dataset Management")
@@ -9,7 +11,15 @@ def dataset_management():
         load_datasets()
 
 
+def ensure_datasets_loaded():
+    if "existing_datasets" not in st.session_state:
+        # Load once
+        st.session_state.existing_datasets = {}
+        read_metainfo_existing_datasets()
+
+
 def load_datasets():
+    ensure_datasets_loaded()
     shown_datasets = []
     for txt_name in st.session_state.existing_datasets:
         ds = st.session_state.stelar_client.datasets[txt_name]
