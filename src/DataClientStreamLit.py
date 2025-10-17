@@ -36,7 +36,7 @@ class DataClientStreamLit:
 
         dataSetkey = dataSetkey
         StreamID = StreamID
-        if self.dataset_name == "synopses_experiment":
+        if self.dataset_name == "rainfall-nl":
             if self.resource.name == "stations_rr":
                 return
             self.send_rr(dataSetkey, StreamID)
