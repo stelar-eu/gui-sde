@@ -54,7 +54,7 @@ class DataClientStreamLit:
                 break
         if locations:
             ml.read_stations(locations)
-            ml.print_stats()
+            # ml.print_stats()
         if self.producer is None:
             self.producer = KafkaProducer(**self.conf)
 

@@ -36,12 +36,15 @@ def get_sidebar():
     if st.sidebar.button("Send Data"):
         if st.session_state.current_dataset:
             resources = st.session_state.selected_dataset.resources
+            start_time = datetime.now()
+
             for res in resources:
                 if res.format != "Synopsis":
                     get_data_from_url(
                         res, st.session_state.current_dataset['dataSetkey'],
                         st.session_state.current_dataset['StreamID'])
-            st.sidebar.success("All data has been sent to the Kafka topic")
+            end_time = datetime.now()
+            st.sidebar.success(f"All data has been sent to the Kafka topic in {end_time - start_time} seconds")
         else:
             st.sidebar.error("No dataset selected")
 
@@ -50,8 +53,6 @@ def get_data_from_url(res, dataSetkey, StreamID):
     bucket_name, object_path = st.session_state.parse_s3_url(res.url)
 
     data = st.session_state.minio_client.get_object(bucket_name, object_path)
-    start_time = datetime.now()
     rr = DataClientStreamLit(data, dataSetkey, res)
     rr.send(dataSetkey, StreamID)
-    end_time = datetime.now()
-    st.write("Time taken to send data to Kafka: ", end_time - start_time)
+
