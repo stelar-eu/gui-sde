@@ -40,24 +40,25 @@ def create_synopsis():
     # Synopsis Type Dropdown
     synopsis_type = st.selectbox(
         "Query Type - Synopsis Name",
-        options=list(st.session_state.synMap.keys()),
+        options=["-- Select a synopsis type --"] + list(st.session_state.synMap.keys()),
         key="select_synopsis_type",
     )
 
-    if st.button("Select"):
-        if not dataset_key or not stream_id or not st.session_state.u_name:
-            st.error("Please fill in all fields.")
-            return
+    if synopsis_type != "-- Select a synopsis type --":
+        if st.button("Confirm Synopsis Type Selection"):
+            if not dataset_key or not stream_id or not st.session_state.u_name:
+                st.error("Please fill in all fields.")
+                return
 
-        if st.session_state.u_name in st.session_state.existing_synopses:
-            st.error(f"Unique Name {st.session_state.u_name} already exists.")
-            return
+            if st.session_state.u_name in st.session_state.existing_synopses:
+                st.error(f"Unique Name {st.session_state.u_name} already exists.")
+                return
 
-        st.session_state.synopsis_type = synopsis_type  # Save for later
-        if synopsis_type == "Spatial Queries - SpatialSketch":
-            st.session_state.ui_stage = "choose_basic_sketch"
-        else:
-            st.session_state.ui_stage = "custom_parameters"
+            st.session_state.synopsis_type = synopsis_type  # Save for later
+            if synopsis_type == "Spatial Queries - SpatialSketch":
+                st.session_state.ui_stage = "choose_basic_sketch"
+            else:
+                st.session_state.ui_stage = "custom_parameters"
 
     # Display the appropriate UI based on the selected stage
     if st.session_state.ui_stage == "choose_basic_sketch":
@@ -70,21 +71,6 @@ def create_synopsis():
         st.error("No response from SDE. Please check your connection.")
     if st.session_state.ui_stage == "done":
         st.success("Synopsis successfully created!")
-
-    # # Create Synopsis Button
-    # if st.button("Select"):
-    #     if not dataset_key or not stream_id or not st.session_state.u_name:
-    #         st.error("Please fill in all fields.")
-    #         return
-    #
-    #     if st.session_state.u_name in st.session_state.existing_synopses:
-    #         st.error(f"Unique Name {st.session_state.u_name} already exists.")
-    #         return
-    #
-    #     if synopsis_type == "Spatial Queries - SpatialSketch":
-    #         choose_basic_sketch()
-    #     else:
-    #         custom_parameters(st.session_state.synMap[synopsis_type], st.session_state.current_dataset)
 
 
 def choose_basic_sketch():
@@ -116,6 +102,7 @@ def spatial_sketch_parameters(basic_sketch_name):
     st.subheader(f"Parameters for {syn['name']}")
 
     basic_parameters = ["keyField", "valueField", "operationMode", "BasicSketchParameters", "BasicSketchSynID"]
+    coord_parameters = ["minX", "maxX", "minY", "maxY"]
     if "param_dict" not in st.session_state:
         st.session_state.param_dict = {}
         for param in syn["parameters"]:
@@ -128,7 +115,11 @@ def spatial_sketch_parameters(basic_sketch_name):
     with st.form(key="spatial_parameters_form"):
         for param in syn["parameters"]:
             if param not in basic_parameters:
-                st.session_state.param_dict[f"spatial_{param}"] = st.text_input(param, key=f"spatial_{param}")
+                if param not in coord_parameters:
+                    st.session_state.param_dict[f"spatial_{param}"] = st.text_input(param, key=f"spatial_{param}")
+                else:
+                    # Get from dataset if available
+                    st.session_state.param_dict[f"spatial_{param}"] = dataset[param] if dataset and param in dataset else st.text_input(param, key=f"spatial_{param}")
         st.subheader(f"Parameters for Basic Sketch: {basic_syn['name']}")
         for param in basic_syn["parameters"]:
             if param in ["keyField", "valueField"] and dataset:

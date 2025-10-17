@@ -1,11 +1,9 @@
 import ast
-import re
 from sde_py_lib.client import Client
 from stelar.client import Client as stelarClient
 from MinIOClient import MinIOClient
 
 import streamlit as st
-import json
 from urllib.parse import urlparse, parse_qs
 
 
@@ -37,6 +35,7 @@ def get_creds(qparams):
         },
     }
     return creds
+
 
 
 class App:
@@ -107,6 +106,8 @@ class App:
             st.session_state.existing_synopses = {}
         if "current_dataset" not in st.session_state:
             st.session_state.current_dataset = None
+        if "responses" not in st.session_state:
+            st.session_state.responses = []
 
     @staticmethod
     @st.cache_data

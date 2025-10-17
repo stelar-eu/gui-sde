@@ -6,6 +6,7 @@ from src.DataManagement import dataset_management
 from src.App import App
 from src.create_synopsis import create_synopsis
 from src.query_synopses import query_synopses
+from src.query_synopses import display_responses
 from src.sidebar import get_sidebar
 
 from urllib.parse import urlparse
@@ -42,3 +43,6 @@ create_synopsis()
 
 # Query Synopsis
 query_synopses()
+
+# display responses
+display_responses()

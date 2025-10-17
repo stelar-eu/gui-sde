@@ -11,10 +11,10 @@ class StationRecord:
 
     def normalize_longitude(self, lon):
         """Wrap longitude to range [-180, 180]."""
-        while lon > 180:
-            lon -= 360
-        while lon < -180:
-            lon += 360
+        while lon > 18000:
+            lon -= 36000
+        while lon < -18000:
+            lon += 36000
         return lon
 
     def get_latitude(self):
@@ -29,9 +29,9 @@ class StationRecord:
         sign = -1 if "-" in latlon else 1
         latlon = latlon.replace("+", "").replace("-", "")
         parts = latlon.split(":")
-        degrees = float(parts[0])
-        minutes = float(parts[1])
-        seconds = float(parts[2])
+        degrees = float(parts[0]) * 100
+        minutes = float(parts[1]) * 100
+        seconds = float(parts[2]) * 100
         decDegrees = sign * (degrees + minutes / 60 + seconds / 3600)
         decDegrees = decDegrees
         return decDegrees

@@ -1,10 +1,44 @@
 import json
 import re
 
+import pandas as pd
 import streamlit as st
 from streamlit_folium import st_folium
 import folium
 from folium.plugins import Draw
+
+from src.synMap import SynMap
+
+
+def display_responses():
+    st.subheader("📊 Query Results")
+
+    if not st.session_state.responses:
+        st.info("No results yet. Add one above.")
+        return
+
+    # Prepare data for table
+    rows = []
+    st.session_state.synMapClass = SynMap()
+    c = 0
+    for r in st.session_state.responses:
+        syn = r["synopsis"]
+        rows.append({"Query ID": c,
+            "Estimation": r["response"]["estimation"],
+            "Query Parameters": ", ".join(r["response"]["param"]),
+            "Synopsis UID": syn["uid"],
+            "Synopsis Type": st.session_state.synMapClass.getSynName(syn["synopsisID"])
+        })
+        c += 1
+
+    df = pd.DataFrame(rows)
+
+    # Sort or format if needed
+    df = df.sort_values(by="Query ID", ascending=False)
+
+    # --- Nice table display ---
+    st.dataframe(df, use_container_width=True)
+
 
 
 def load_synopses():
@@ -60,16 +94,6 @@ def query_synopses():
 
         # Ensure required session state
         if st.button("Load Existing Synopses"):
-            # st.session_state.existing_synopses = {"syn_1": {
-            #     "synopsisID": 30,
-            #     "dataSetkey": "synopses_experiment",
-            #     "streamID": "S1",
-            #     "noOfP": 2,
-            #     "uid": 5,
-            #     "param": ["key1", "key2"],
-            #     "externalUID": "syn_1"
-            # }}
-            # example synopsis
             load_synopses()
     if st.session_state.get("ui_stage") == "select_synopses_to_query":
         if "selected_synopsis_uid" not in st.session_state:
@@ -82,17 +106,20 @@ def query_synopses():
             f"{uid} | {syn['synopsisID']} | {syn['dataSetkey']}"
             for uid, syn in st.session_state.existing_synopses.items()
         ]
-        selected_label = st.selectbox("Select a synopsis to query:", options=synopsis_labels,
-                                      key="query_synopsis_selector")
+        selected_synopsis = st.selectbox(
+            "Select a synopsis to query:",
+            options=["-- Select a synopsis --"] + synopsis_labels,
+            key="query_synopsis_selector")
 
-        if selected_label:
-            uid = selected_label.split(" | ")[0]
-            st.session_state.selected_synopsis_uid = uid
-            if st.session_state.existing_synopses[uid]["synopsisID"] == 30:
-                st.session_state.ui_stage = "spatial_query_parameters"
-                st.session_state.basic_sketch_to_query = st.session_state.existing_synopses[uid]["param"][4]
-            else:
-                st.session_state.ui_stage = "regular_query_parameters"
+        if selected_synopsis != "-- Select a synopsis --":
+            if st.button("Confirm Synopsis Selection"):
+                uid = selected_synopsis.split(" | ")[0]
+                st.session_state.selected_synopsis_uid = uid
+                if st.session_state.existing_synopses[uid]["synopsisID"] == 30:
+                    st.session_state.ui_stage = "spatial_query_parameters"
+                    st.session_state.basic_sketch_to_query = st.session_state.existing_synopses[uid]["param"][4]
+                else:
+                    st.session_state.ui_stage = "regular_query_parameters"
     if st.session_state.ui_stage == "spatial_query_parameters":
         show_spatial_query_form()
     if st.session_state.ui_stage == "regular_query_parameters":
@@ -108,14 +135,15 @@ def extract_bounds(geojson):
         lats = [pt[1] for pt in coords]
         lons = [pt[0] for pt in coords]
         return {
-            "minX": min(lons),
-            "maxX": max(lons),
-            "minY": min(lats),
-            "maxY": max(lats)
+            "minX": min(lons)*100,
+            "maxX": max(lons)*100,
+            "minY": min(lats)*100,
+            "maxY": max(lats)*100
         }
     except (IndexError, KeyError, TypeError):
         st.error("Invalid GeoJSON format.")
         return None
+
 
 def process_spatial_query_submission(uid):
     raw_param = st.session_state[f"spatial_query_params_{uid}"]
@@ -127,7 +155,6 @@ def process_spatial_query_submission(uid):
     basic_sketch_id = st.session_state.basic_sketch_to_query
     st.write("Basic Sketch ID:", basic_sketch_id)
     spatial_params = [f"{region[k]:.5f}" for k in ["minX", "maxX", "minY", "maxY"]] + [basic_sketch_id]
-
 
     param_list = spatial_params + basic_param_list
     request_data = build_query_request(uid, param_list)
@@ -149,14 +176,13 @@ def show_spatial_query_form():
     uid = st.session_state.selected_synopsis_uid
     syn = st.session_state.existing_synopses[uid]
     dataset = st.session_state.current_dataset
-    st.write(dataset["minY"], dataset["minX"], dataset["maxY"], dataset["maxX"])
 
-    center_lat = (dataset["minY"] + dataset["maxY"]) / 2
-    center_lon = (dataset["minX"] + dataset["maxX"]) / 2
+    center_lat = (dataset["minY"]/100 + dataset["maxY"]/100) / 2
+    center_lon = (dataset["minX"]/100 + dataset["maxX"]/100) / 2
 
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=2)
+    m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
     folium.Rectangle(
-        bounds=[[dataset["minY"], dataset["minX"]], [dataset["maxY"], dataset["maxX"]]],
+        bounds=[[dataset["minY"]/100, dataset["minX"]/100], [dataset["maxY"]/100, dataset["maxX"]/100]],
         color="blue", fill=True, fill_opacity=0.1, tooltip="Dataset Bounds"
     ).add_to(m)
 
@@ -212,46 +238,11 @@ def show_query_form():
             process_query_submission(uid)
 
 
-# def display_query_result(response, syn):
-#     st.subheader("Query Result")
-#
-#     st.markdown("### 🧮 Estimate Output")
-#     result_data = {
-#         "Estimate": response,
-#         "UID": syn["uid"],
-#         "Synopsis Type": syn["synopsisID"],
-#         "Dataset": syn["dataSetkey"],
-#         "Stream ID": syn["streamID"],
-#         "No of P": syn["noOfP"],
-#         "Parameters": ", ".join(syn["param"]) if isinstance(syn["param"], list) else str(syn["param"])
-#     }
-#
-#     for key, val in result_data.items():
-#         st.write(f"**{key}:** {val}")
-
 def display_query_result(response, syn):
-    st.subheader("Query Result")
+    res = {"response": response,
+           "synopsis": syn}
 
-    # 🎯 Big number display
-    st.markdown("### 🧮 Estimate Output")
-    st.metric(label="Estimated Result", value=response['estimation'])
-
-    # 🗂️ Details as two-column layout
-    with st.container():
-        st.markdown("### 📋 Metadata")
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown(f"**UID:** `{syn['uid']}`")
-            st.markdown(f"**Stream ID:** `{syn['streamID']}`")
-            st.markdown(f"**No of P:** `{syn['noOfP']}`")
-
-        with col2:
-            st.markdown(f"**Dataset:** `{syn['dataSetkey']}`")
-            st.markdown(f"**Synopsis Type:** `{syn['synopsisID']}`")
-            st.markdown(f"**Parameters:** `{', '.join(syn['param']) if isinstance(syn['param'], list) else syn['param']}`")
-
+    st.session_state.responses.append(res)
 
 
 def ensure_query_state(uid):

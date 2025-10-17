@@ -223,10 +223,8 @@ class SynMap:
         # find name of the synopsis by their synID
         for key in self.synMap:
             if self.synMap[key]["synID"] == synID:
-                print("name of the synopsis: ", self.synMap[key]["name"])
                 return self.synMap[key]["name"]
-        Exception("Synopsis ID not found")
-
+        Exception(f"Synopsis ID {synID} not found")
 
     def getSynMap(self):
         return self.synMap
