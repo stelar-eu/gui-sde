@@ -16,6 +16,7 @@ RUN apt-get update && \
 # Expose NGINX's port
 EXPOSE 8080
 
+WORKDIR /app/src
 
 # Set the entrypoint
 ENTRYPOINT ["./entrypoint.sh"]
