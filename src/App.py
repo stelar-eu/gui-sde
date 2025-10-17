@@ -1,4 +1,6 @@
 import ast
+import os
+
 from sde_py_lib.client import Client
 from stelar.client import Client as stelarClient
 from MinIOClient import MinIOClient
@@ -140,8 +142,10 @@ class App:
         # - DatasetName
         # - StreamID
         # - Attribute list
+        # Get absolute path to txt_files from project root
+        file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "txt_files", "datasets.txt")
 
-        with open("./txt_files/datasets.txt", "r") as file:
+        with open(file_path, "r") as file:
             datasets = file.readlines()
             st.session_state.existing_datasets = {}
             for d in datasets:
