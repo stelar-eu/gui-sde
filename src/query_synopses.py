@@ -90,7 +90,7 @@ def extract_json_from_content(data):
 
 def query_synopses():
     st.header("Query Synopsis")
-    if "ui_stage" not in st.session_state or st.session_state.ui_stage == "done" or st.session_state.ui_stage == "select_synopsis":
+    if "ui_stage" not in st.session_state or st.session_state.ui_stage == "select_synopsis":
 
         # Ensure required session state
         if st.button("Load Existing Synopses"):
@@ -124,6 +124,9 @@ def query_synopses():
         show_spatial_query_form()
     if st.session_state.ui_stage == "regular_query_parameters":
         show_query_form()
+    if st.session_state.ui_stage != "select_synopsis" and st.button("Reload Synopses"):
+        load_synopses()
+        st.rerun()
 
 
 def extract_bounds(geojson):
@@ -167,7 +170,6 @@ def process_spatial_query_submission(uid):
     else:
         st.error("No response from server.")
     st.session_state.query_submitted = False
-    st.session_state.ui_stage = "done"
 
 
 def show_spatial_query_form():
@@ -180,30 +182,31 @@ def show_spatial_query_form():
     center_lat = (dataset["minY"]/100 + dataset["maxY"]/100) / 2
     center_lon = (dataset["minX"]/100 + dataset["maxX"]/100) / 2
 
-    m = folium.Map(location=[center_lat, center_lon], zoom_start=6)
+    m = folium.Map(location=[center_lat, center_lon], zoom_start=7)
     folium.Rectangle(
         bounds=[[dataset["minY"]/100, dataset["minX"]/100], [dataset["maxY"]/100, dataset["maxX"]/100]],
         color="blue", fill=True, fill_opacity=0.1, tooltip="Dataset Bounds"
     ).add_to(m)
 
-    Draw(export=True).add_to(m)
     if "spatial_filter_bounds" in st.session_state:
         b = st.session_state["spatial_filter_bounds"]
         folium.Rectangle(
-            bounds=[[b["minY"], b["minX"]], [b["maxY"], b["maxX"]]],
-            color="red", fill=True, fill_opacity=0.1, tooltip="Selected Region"
+            bounds=[[b["minY"]/100, b["minX"]/100], [b["maxY"]/100, b["maxX"]/100]],
+            color="red", fill=True, fill_opacity=0.3, tooltip="Selected Region"
         ).add_to(m)
 
+    Draw(export=True).add_to(m)
     map_data = st_folium(m, height=500, width=700)
 
     if map_data and "last_active_drawing" in map_data:
         region_bounds = extract_bounds(map_data["last_active_drawing"])
-        if region_bounds:
+        if region_bounds and region_bounds != st.session_state.get("spatial_filter_bounds"):
             st.session_state["spatial_filter_bounds"] = region_bounds
-            st.success("Region selected!")
-            # Show query input form
-            st.write("Selected region bounds:", region_bounds)
+
             st.session_state["region_selected"] = True
+            st.success("Region selected!")
+            st.rerun()
+            # Show query input form
 
     if st.session_state.get("region_selected", False):
         with st.form(key=f"spatial_query_form_{uid}"):
@@ -219,6 +222,7 @@ def show_spatial_query_form():
                     st.write("Spatial query submitted")
                     st.session_state.query_submitted = True
                     process_spatial_query_submission(uid)
+                    st.rerun()
 
 
 def show_query_form():
@@ -236,6 +240,7 @@ def show_query_form():
         if st.form_submit_button("Query Synopsis"):
             st.session_state.query_submitted = True
             process_query_submission(uid)
+            st.rerun()
 
 
 def display_query_result(response, syn):
@@ -294,4 +299,3 @@ def process_query_submission(uid):
     else:
         st.error("No response from server.")
     st.session_state.query_submitted = False
-    st.session_state.ui_stage = "done"
