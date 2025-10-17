@@ -5,8 +5,8 @@ set -e
 CONTEXT_PATH=${CONTEXT_PATH:-app}
 
 # Replace placeholders in Nginx config
-envsubst '${CONTEXT_PATH}' < /app/templ.nginx.conf > /etc/nginx/nginx.conf
+envsubst '${CONTEXT_PATH}' < templ.nginx.conf > /etc/nginx/nginx.conf
 
 # Start both Streamlit and Nginx
-streamlit run main.py --server.baseUrlPath=$CONTEXT_PATH --server.headless=true --server.port=8501 --server.enableCORS=false --server.enableXsrfProtection=false &
+streamlit run src/main.py --server.baseUrlPath=$CONTEXT_PATH --server.headless=true --server.port=8501 --server.enableCORS=false --server.enableXsrfProtection=false &
 nginx -g 'daemon off;'
