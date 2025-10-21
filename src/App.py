@@ -147,6 +147,8 @@ class App:
         Load credentials from a URI.
         The URI should contain query parameters for the credentials.
         """
+        st.write("Streamlit version:", st.__version__)
+        st.write("Query params:", st.query_params)
         qparams = st.query_params
         return get_creds(qparams)
 
