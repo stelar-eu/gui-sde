@@ -6,5 +6,5 @@ pandas
 folium
 minio
 sde_py_lib
-kafka-python
+kafka-python==2.0.6
 stelar-client
