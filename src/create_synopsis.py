@@ -231,7 +231,7 @@ def send_request(syn_parameters, basic_sketch_name=None):
         "param": syn_parameters,
         "noOfP": st.session_state.sde_parameters["parallelization"],
         "uid": st.session_state.u_name,
-        "externalUID": f"create:{st.session_state.u_name}",
+        # "externalUID": f"create:{st.session_state.u_name}",
     }
 
     # Send request

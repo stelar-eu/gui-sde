@@ -277,7 +277,7 @@ def build_query_request(uid, param_list):
         "param": param_list,
         "noOfP": syn["noOfP"],
         "uid": syn["uid"],
-        "externalUID": f"Estimate:{syn['uid']}"
+        # "externalUID": f"Estimate:{syn['uid']}"
     }
 
 
