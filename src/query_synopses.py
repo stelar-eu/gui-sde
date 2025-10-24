@@ -56,7 +56,7 @@ def load_synopses():
         "param": ["synopses"],
         "noOfP": st.session_state.sde_parameters["parallelization"],
         "uid": 5,
-        "externalUID": "getListOfsynopses"
+        # "externalUID": "getListOfsynopses"
     }
 
     resp = st.session_state.sde.send_request(req, "getListOfsynopses")
