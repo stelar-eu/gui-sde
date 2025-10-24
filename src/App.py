@@ -79,6 +79,9 @@ class App:
             st.session_state.credentials = creds
             st.session_state.token = creds["token_json"]
             st.session_state.stelar_client = None  # Force re-initialization of the client
+            if "sde" in st.session_state:
+                self.cleanup()
+                del st.session_state.sde
 
         bootstrap_servers = st.session_state.credentials["kafka"]["bootstrap_servers"]
         if bootstrap_servers:
@@ -92,9 +95,7 @@ class App:
                 "syn_filename": "synopses.txt",
                 "dataset_filename": "datasets.txt",
             }
-        if "sde" in st.session_state:
-            self.cleanup()
-            del st.session_state.sde
+
 
         if "sde" not in st.session_state:
             st.session_state.sde = Client(
