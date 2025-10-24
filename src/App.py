@@ -93,10 +93,10 @@ class App:
                 "syn_filename": "synopses.txt",
                 "dataset_filename": "datasets.txt",
             }
-
-        if "sde" in st.session_state:
-            self.cleanup()
-            del st.session_state.sde
+        #
+        # if "sde" in st.session_state:
+        #     self.cleanup()
+        #     del st.session_state.sde
 
         if "sde" not in st.session_state:
             st.session_state.sde = Client(
