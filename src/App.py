@@ -1,4 +1,5 @@
 import ast
+import atexit
 import os
 
 from sde_py_lib.client import Client
@@ -33,7 +34,7 @@ def get_creds(qparams: dict):
             "bucket": qparams.get("bucket", "sde-bucket"),
         },
         "kafka": {
-            "bootstrap_servers": qparams.get("kafka_bootstrap_servers", "sde.stelar.gr:19092"),
+            "bootstrap_servers": qparams.get("kafka_bootstrap_servers", "sde.stelar.gr:29092,sde.stelar.gr:19092"),
         },
     }
     return creds
@@ -61,6 +62,8 @@ def read_metainfo_existing_datasets():
 
 class App:
     def __init__(self, local=False):
+        # Register the cleanup function to close the Kafka consumer and producer
+        atexit.register(self.cleanup)
         query_params = st.query_params.to_dict()
 
         # Credentials are always loaded from the URI since the Tokens required 
@@ -149,3 +152,12 @@ class App:
         The URI should contain query parameters for the credentials.
         """
         return get_creds(query_params)
+
+    def cleanup(self):
+        """Gracefully shuts down the Kafka consumer and producer."""
+        if "sde" in st.session_state:
+            try:
+                st.session_state.sde.close()
+                print("Kafka consumer and producer closed successfully.")
+            except Exception as e:
+                print(f"Error during Kafka cleanup: {e}")
