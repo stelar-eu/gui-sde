@@ -96,10 +96,9 @@ class App:
 
         if "sde" in st.session_state:
             self.cleanup()
-            st.session_state.sde = None
-            # del st.session_state.sde
+            del st.session_state.sde
 
-        if "sde" not in st.session_state or st.session_state.sde is None:
+        if "sde" not in st.session_state:
             st.session_state.sde = Client(
                 str(st.session_state.sde_parameters["bootstrap_servers"]),
                 st.session_state.sde_parameters['request_topic'],
