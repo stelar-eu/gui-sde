@@ -162,7 +162,7 @@ def process_spatial_query_submission(uid):
     param_list = spatial_params + basic_param_list
     request_data = build_query_request(uid, param_list)
 
-    response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
+    response = st.session_state.sde.send_request(request_data, "spatialQuery")
 
     if response:
         st.success("Query submitted successfully.")
@@ -291,7 +291,7 @@ def process_query_submission(uid):
     param_list = [x.strip() for x in raw_param.split(",")]
     request_data = build_query_request(uid, param_list)
 
-    response = st.session_state.sde.send_request(request_data, request_data["externalUID"])
+    response = st.session_state.sde.send_request(request_data, "submitQuery")
 
     if response:
         st.success("Query submitted successfully.")
